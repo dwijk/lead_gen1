@@ -60,6 +60,7 @@ def facebook_webhook(request):
             lead_id = payload.get('entry')[0].get('changes')[0].get('value').get('leadgen_id')
             print("lead_id",lead_id)
             lead_data = lead_to_data(lead_id)
+            print("lead_data",lead_data)
             lead_instance = LeadgenData.objects.create(lead_id=lead_id, lead_data=lead_data.get('field_data'))
             return JsonResponse({"status": "received",
                                 "id": data_instance.id}, status=200)
@@ -75,8 +76,9 @@ def lead_to_data(lead_id):
     PAGE_ACCESS_TOKEN = "EAAH9kwN6EEUBO8ZAb6e3jHrLnCwfYvU25yRu2SZCj41mjw06k3GUzuDxwUbmuKhZAouFG5pqB945ijPVsmGZCyjYUFqvEHQSvoQILMOoMdeGU1dZAXItJkMvwrm41EpTi1E9URoNwwofOaZCbCqKtAZAvdkguxeHJdB8ic3zSZCi4HC7AsTFVq8TkZCBw88fmCqwwH2Wo4k5peZAd38Y0ZAB0pXFJSDtQZDZD"
     url = f"https://graph.facebook.com/v22.0/{lead_id}?access_token={PAGE_ACCESS_TOKEN}"
     response = requests.get(url)
+    print("response",response)
     response_json = response.json()
-    print("resonse_json")
+    print("resonse_json",response_json)
     return response_json
     
     
