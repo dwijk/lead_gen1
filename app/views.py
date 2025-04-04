@@ -72,10 +72,11 @@ def facebook_webhook(request):
 
 
 def lead_to_data(lead_id):
-    PAGE_ACCESS_TOKEN = "EAAH9kwN6EEUBO9z4guZCgqjNLOQeCmYT0bV3CC8kJaf0kmOKgrvZB6tlVWzgZBW5t1l1ZA5K2InR7J0k32MM1CiSiUTzH7EDTY3tVoDscnn84ZBtQipIgfy0OC5q6Vkw32sdXcUCxhU0P6J0xdGWj46htnuONCFC1GIdZAT9tJOBZBJEmF04ZAZA4ZA7oNl7nqZAiZCwQ7ahZCq9D5R9nmqU30PnOnVN4L6oYAGoE"
+    PAGE_ACCESS_TOKEN = "EAAH9kwN6EEUBO8ZAb6e3jHrLnCwfYvU25yRu2SZCj41mjw06k3GUzuDxwUbmuKhZAouFG5pqB945ijPVsmGZCyjYUFqvEHQSvoQILMOoMdeGU1dZAXItJkMvwrm41EpTi1E9URoNwwofOaZCbCqKtAZAvdkguxeHJdB8ic3zSZCi4HC7AsTFVq8TkZCBw88fmCqwwH2Wo4k5peZAd38Y0ZAB0pXFJSDtQZDZD"
     url = f"https://graph.facebook.com/v22.0/{lead_id}?access_token={PAGE_ACCESS_TOKEN}"
     response = requests.get(url)
     response_json = response.json()
+    print("resonse_json")
     return response_json
     
     
