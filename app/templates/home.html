@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataStore and Users</title>
+</head>
+<body>
+
+    <h1>User List</h1>
+    <ul>
+        {% for user in users %}
+            <li><strong>Username:</strong> {{ user.username }} | <strong>Email:</strong> {{ user.email }}</li>
+        {% empty %}
+            <li>No users found.</li>
+        {% endfor %}
+    </ul>
+
+    <h1>Lead id data</h1>
+    <ul>
+        {% for data in data_store %}
+            <li>
+                <strong>User:</strong> {{ data.name }} <br>
+                <strong>Data:</strong> {{ data.data }}
+            </li>
+        {% empty %}
+            <li>No data available</li>
+        {% endfor %}
+    </ul>
+
+    <h1>Data Store</h1>
+    <ul>
+        {% for lead in lead_data %}
+            <li>
+                <strong>lead_id:</strong> {{ lead.lead_id }} <br>
+                <strong>lead_Data:</strong> {{ lead.lead_data }}
+            </li>
+        {% empty %}
+            <li>No data available</li>
+        {% endfor %}
+    </ul>
+
+</body>
+</html>
