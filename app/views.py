@@ -58,8 +58,8 @@ def facebook_webhook(request):
             print("payload",payload)
             data_instance = DataStore.objects.create(name="Lead Data", data=payload)
             lead_id = payload.get('entry')[0].get('changes')[0].get('value').get('leadgen_id')
-            print("lead_id",1301866194236291)
-            lead_data = lead_to_data(1301866194236291)
+            print("lead_id",lead_id)
+            lead_data = lead_to_data(lead_id)
             lead_instance = LeadgenData.objects.create(lead_id=lead_id, lead_data=lead_data.get('field_data'))
             return JsonResponse({"status": "received",
                                 "id": data_instance.id}, status=200)
