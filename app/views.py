@@ -83,6 +83,7 @@ def lead_to_data(lead_id):
     
     
 def facebook_callback(request):
+    print("request",request)
     code = request.GET.get("code")
     print("code",code)
     if not code:
