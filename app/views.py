@@ -83,8 +83,9 @@ def lead_to_data(lead_id):
     
     
 def facebook_callback(request):
-    print("request",request)
-    code = request.GET.get("code")
+    if request.method == "GET":
+        print("request",request)
+        code = request.GET.get("code")
     print("code",code)
     if not code:
         return JsonResponse({"error": "Missing code"}, status=400)
@@ -92,7 +93,7 @@ def facebook_callback(request):
     token_exchange_url = "https://graph.facebook.com/v18.0/oauth/access_token"
     params = {
         "client_id": "560282837061701",
-        "redirect_uri": "https://leadgen1.vercel.app/app/auth/facebook/callback/",
+        "redirect_uri": "https://leadgen1-i9kjxzvcc-dwijks-projects.vercel.app/app/auth/facebook/callback/",
         "client_secret": "e1b5f72b0663b30b3e52af77ef79a804",
         "code": code,
     }
