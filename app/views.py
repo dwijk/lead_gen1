@@ -82,3 +82,21 @@ def lead_to_data(lead_id):
     return response_json
     
     
+def facebook_callback(request):
+    code = request.GET.get("code")
+    print("code",code)
+    if not code:
+        return JsonResponse({"error": "Missing code"}, status=400)
+
+    token_exchange_url = "https://graph.facebook.com/v18.0/oauth/access_token"
+    params = {
+        "client_id": "560282837061701",
+        "redirect_uri": "https://yourdomain.com/app/auth/facebook/callback/",
+        "client_secret": "e1b5f72b0663b30b3e52af77ef79a804",
+        "code": code,
+    }
+
+    token_res = requests.get(token_exchange_url, params=params)
+    token_data = token_res.json()
+
+    return JsonResponse(token_data)
