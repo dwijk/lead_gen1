@@ -105,3 +105,18 @@ def facebook_callback(request):
 
     # return JsonResponse(token_data)
     return render(request, "facebook_callback.html")
+
+
+@csrf_exempt
+def receive_token(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        access_token = data.get("access_token")
+
+        if access_token:
+            request.session["fb_access_token"] = access_token
+            return JsonResponse({"message": "Token saved", "access_token": access_token})
+
+        return JsonResponse({"error": "Access token missing"}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
