@@ -86,29 +86,16 @@ def lead_to_data(lead_id):
     
     
 def facebook_callback(request):
-    # if request.method == "GET":
-    #     print("request",request)
-    #     code = request.GET.get("#access_token")
-    # if not code:
-    #     return JsonResponse({"error": "Missing code"}, status=400)
-
-    # token_exchange_url = "https://graph.facebook.com/v18.0/oauth/access_token"
-    # params = {
-    #     "client_id": "560282837061701",
-    #     "redirect_uri": "https://lead-gen1.vercel.app/app/auth/facebook/callback/",
-    #     "client_secret": "e1b5f72b0663b30b3e52af77ef79a804",
-    #     "code": code,
-    # }
-
-    # token_res = requests.get(token_exchange_url, params=params)
-    # token_data = token_res.json()
-
-    # return JsonResponse(token_data)
+    print("facebook_callback")
     return render(request, "facebook_callback.html")
 
 
 @csrf_exempt
 def receive_token(request):
+    print("=== receive_token hit ===")
+    print("Request method:", request.method)
+    print("Request headers:", request.headers)
+    print("Request body:", request.body)
     if request.method == "POST":
         data = json.loads(request.body)
         access_token = data.get("access_token")

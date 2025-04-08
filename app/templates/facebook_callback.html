@@ -15,7 +15,7 @@
             if (accessToken) {
                 console.log("Token:", accessToken);
 
-                fetch("/auth/facebook/receive-token/", {
+                fetch("https://lead-gen1.vercel.app/app/auth/facebook/receive-token/", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
