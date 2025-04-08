@@ -18,10 +18,13 @@ def home(request):
     users = User.objects.all()  # Fetch all users
     data_store = DataStore.objects.all()  # Fetch all DataStore entries
     lead_data = LeadgenData.objects.all()
+    access_token = request.session.get('fb_access_token', None)
+
     context = {
         'users': users,
         'data_store': data_store,
-        'lead_data':lead_data
+        'lead_data':lead_data,
+        'access_token':access_token
     }
     
     return render(request, 'home.html', context)
@@ -83,26 +86,22 @@ def lead_to_data(lead_id):
     
     
 def facebook_callback(request):
-    if request.method == "GET":
-        print("request",request)
-        code = request.GET.get("#access_token")
-        access_token = request.GET.get("access_token")
-        code2 = request.GET.get("code")
-        print("code",code)
-        print("access_token",access_token)
-        print("code2",code2)
-    if not code:
-        return JsonResponse({"error": "Missing code"}, status=400)
+    # if request.method == "GET":
+    #     print("request",request)
+    #     code = request.GET.get("#access_token")
+    # if not code:
+    #     return JsonResponse({"error": "Missing code"}, status=400)
 
-    token_exchange_url = "https://graph.facebook.com/v18.0/oauth/access_token"
-    params = {
-        "client_id": "560282837061701",
-        "redirect_uri": "https://lead-gen1.vercel.app/app/auth/facebook/callback/",
-        "client_secret": "e1b5f72b0663b30b3e52af77ef79a804",
-        "code": code,
-    }
+    # token_exchange_url = "https://graph.facebook.com/v18.0/oauth/access_token"
+    # params = {
+    #     "client_id": "560282837061701",
+    #     "redirect_uri": "https://lead-gen1.vercel.app/app/auth/facebook/callback/",
+    #     "client_secret": "e1b5f72b0663b30b3e52af77ef79a804",
+    #     "code": code,
+    # }
 
-    token_res = requests.get(token_exchange_url, params=params)
-    token_data = token_res.json()
+    # token_res = requests.get(token_exchange_url, params=params)
+    # token_data = token_res.json()
 
-    return JsonResponse(token_data)
+    # return JsonResponse(token_data)
+    return render(request, "facebook_callback.html")

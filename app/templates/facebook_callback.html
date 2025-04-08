@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Facebook Callback</title>
+</head>
+<body>
+    <h2>Logging in with Facebook...</h2>
+
+    <script>
+        window.onload = function () {
+            const hash = window.location.hash;
+            const params = new URLSearchParams(hash.replace("#", ""));
+            const accessToken = params.get("access_token");
+
+            if (accessToken) {
+                console.log("Token:", accessToken);
+
+                fetch("/auth/facebook/receive-token/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ access_token: accessToken })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.body.innerHTML = "<h3>Facebook login successful!</h3><pre>" + JSON.stringify(data, null, 2) + "</pre>";
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    document.body.innerHTML = "<h3>Error sending token</h3>";
+                });
+            } else {
+                document.body.innerHTML = "<h3>No access token found</h3>";
+            }
+        };
+    </script>
+</body>
+</html>
