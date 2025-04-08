@@ -85,8 +85,12 @@ def lead_to_data(lead_id):
 def facebook_callback(request):
     if request.method == "GET":
         print("request",request)
-        code = request.GET.get("access_token")
-    print("code",code)
+        code = request.GET.get("#access_token")
+        access_token = request.GET.get("access_token")
+        code2 = request.GET.get("code")
+        print("code",code)
+        print("access_token",access_token)
+        print("code2",code2)
     if not code:
         return JsonResponse({"error": "Missing code"}, status=400)
 
