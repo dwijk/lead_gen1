@@ -11,11 +11,12 @@
             const hash = window.location.hash;
             const params = new URLSearchParams(hash.replace("#", ""));
             const accessToken = params.get("access_token");
+            const userUUID = "{{ user_uuid }}";
 
             if (accessToken) {
                 console.log("Token:", accessToken);
 
-                fetch("https://lead-gen1.vercel.app/app/auth/facebook/receive-token/", {
+                fetch("https://lead-gen1.vercel.app/app/auth/facebook/receive-token/${userUUID}/", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
