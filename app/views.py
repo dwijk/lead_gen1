@@ -68,7 +68,7 @@ def facebook_webhook(request,user_uuid):
             data_instance = DataStore.objects.create(name="Lead Data", data=payload)
             lead_id = payload.get('entry')[0].get('changes')[0].get('value').get('leadgen_id')
             print("lead_id",lead_id)
-            lead_data = lead_to_data(lead_id,user_uuid)
+            lead_data = lead_to_data(request,lead_id,user_uuid)
             print("lead_data",lead_data)
             user_instance = get_object_or_404(UserData, uuid=user_uuid)
             print("user_instance",user_instance)
@@ -92,13 +92,13 @@ def fetch_lead_data(lead_id,long_access_token):
     return response_json
 
 
-def lead_to_data(lead_id,user_uuid):
+def lead_to_data(request,lead_id,user_uuid):
     long_token = TokenDate.objects.filter(user_uuid=user_uuid).first()
     # long_access_token = long_token.long_time_access_token
     print("long_access_token",long_token)
     if not long_token or not long_token.long_time_access_token:        
         print("in if")
-        facebook_login_redirect(user_uuid)
+        facebook_login_redirect(request,user_uuid)
         long_token = get_object_or_404(TokenDate, user_uuid=user_uuid)
         print("long_token_1",long_token)
         long_access_token = long_token.long_time_access_token
