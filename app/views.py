@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -68,7 +68,7 @@ def facebook_webhook(request,user_uuid):
             data_instance = DataStore.objects.create(name="Lead Data", data=payload)
             lead_id = payload.get('entry')[0].get('changes')[0].get('value').get('leadgen_id')
             print("lead_id",lead_id)
-            lead_data = lead_to_data(lead_id)
+            lead_data = lead_to_data(lead_id,user_uuid)
             print("lead_data",lead_data)
             lead_instance = LeadgenData.objects.create(lead_id=lead_id,user_uuid=user_uuid, lead_data=lead_data.get('field_data'))
             return JsonResponse({"status": "received",
@@ -81,9 +81,11 @@ def facebook_webhook(request,user_uuid):
             return JsonResponse({"error": "Server error", "details": str(e)}, status=500)
 
 
-def lead_to_data(lead_id):
-    PAGE_ACCESS_TOKEN = "EAAH9kwN6EEUBOyFlF1JCYmIbikN5BvNRN9jHyf7ZCh3ocT8kBwZBlZAjcuslEccqAtjPRFHxHQzsIKhZCaHkJBG9GQSmZB85lRFcbugn4YbJL00R1EtSJj3FlAv0tbNVY0sTjTfk3YSXi5SJdNuGySyjaXaVZAePROzBnjaGzoFXnxGFW7jTmssmfltdJn88S9A9ZCVZCKQijHdu5d3jdrrq0s429QZDZD"
-    url = f"https://graph.facebook.com/v22.0/{lead_id}?access_token={PAGE_ACCESS_TOKEN}"
+def lead_to_data(lead_id,user_uuid):
+    long_token = get_object_or_404(TokenDate, user_uuid=user_uuid)
+    token = long_token.long_time_access_token
+    # PAGE_ACCESS_TOKEN = "EAAH9kwN6EEUBOyFlF1JCYmIbikN5BvNRN9jHyf7ZCh3ocT8kBwZBlZAjcuslEccqAtjPRFHxHQzsIKhZCaHkJBG9GQSmZB85lRFcbugn4YbJL00R1EtSJj3FlAv0tbNVY0sTjTfk3YSXi5SJdNuGySyjaXaVZAePROzBnjaGzoFXnxGFW7jTmssmfltdJn88S9A9ZCVZCKQijHdu5d3jdrrq0s429QZDZD"
+    url = f"https://graph.facebook.com/v22.0/{lead_id}?access_token={token}"
     response = requests.get(url)
     print("response",response)
     response_json = response.json()
