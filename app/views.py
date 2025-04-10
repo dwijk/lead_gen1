@@ -94,9 +94,9 @@ def fetch_lead_data(lead_id,long_access_token):
 
 def lead_to_data(lead_id,user_uuid):
     long_token = TokenDate.objects.filter(user_uuid=user_uuid).first()
-    long_access_token = long_token.long_time_access_token
-    print("long_access_token",long_access_token)
-    if not long_access_token:
+    # long_access_token = long_token.long_time_access_token
+    print("long_access_token",long_token)
+    if not long_token or not long_token.long_time_access_token:        
         print("in if")
         facebook_login_redirect(user_uuid)
         long_token = get_object_or_404(TokenDate, user_uuid=user_uuid)
@@ -105,10 +105,6 @@ def lead_to_data(lead_id,user_uuid):
         print("long_access_token",long_access_token)
         reponse_data = fetch_lead_data(lead_id,long_access_token)
         return reponse_data
-    # url = f"https://graph.facebook.com/v22.0/{lead_id}?access_token={access_token}"
-    # response = requests.get(url)
-    # print("response",response)
-    # response_json = response.json()
     response_data = fetch_lead_data(lead_id,long_access_token)
     print("resonse_json",response_data)
     return response_data
