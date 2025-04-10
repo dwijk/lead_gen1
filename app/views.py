@@ -47,8 +47,9 @@ VERIFY_TOKEN = 'a2c75548ce868a44d4ed57164be29362054e0b4f83e135ad3c67b27319456498
 @csrf_exempt
 def facebook_webhook(request,user_uuid):
     print("here")
-    user_uuid = request.GET.get("uuid")
-    print("uuid",user_uuid)
+    print("user_uuid",user_uuid)
+    user_uuid1 = request.GET.get("uuid")
+    print("uuid",user_uuid1)
     if request.method == "GET":
 
         mode = request.GET.get("hub.mode")
