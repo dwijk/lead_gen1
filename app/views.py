@@ -70,7 +70,11 @@ def facebook_webhook(request,user_uuid):
             print("lead_id",lead_id)
             lead_data = lead_to_data(lead_id,user_uuid)
             print("lead_data",lead_data)
-            lead_instance = LeadgenData.objects.create(lead_id=lead_id,user_uuid=user_uuid, lead_data=lead_data.get('field_data'))
+            user_instance = get_object_or_404(UserData, uuid=user_uuid)
+            print("user_instance",user_instance)
+            lead_instance = LeadgenData.objects.create(lead_id=lead_id,user_uuid=user_instance, lead_data=lead_data.get('field_data'))
+            print("lead_instance",lead_instance)
+
             return JsonResponse({"status": "received",
                                 "id": data_instance.id}, status=200)
         except json.JSONDecodeError:
