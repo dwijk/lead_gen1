@@ -70,7 +70,10 @@ def facebook_webhook(request,user_uuid):
             print("lead_id",lead_id)
             lead_data = lead_to_data(request,lead_id,user_uuid)
             print("lead_data",lead_data)
-            user_instance = get_object_or_404(UserData, uuid=user_uuid)
+            # user_instance = get_object_or_404(UserData, uuid=user_uuid)
+            user_instance = UserData.objects.filter(user_uuid=user_uuid).first()
+            if user_instance is None:
+                facebook_login_redirect(request,user_uuid )
             print("user_instance",user_instance)
             lead_instance = LeadgenData.objects.create(lead_id=lead_id,user_uuid=user_instance, lead_data=lead_data.get('field_data'))
             print("lead_instance",lead_instance)
@@ -98,7 +101,8 @@ def lead_to_data(request,lead_id,user_uuid):
     print("long_access_token",long_token)
     if not long_token or not long_token.long_time_access_token:        
         print("in if")
-        facebook_login_redirect(request,user_uuid)
+        facebook_login_redirect(request,user_uuid )
+
         long_token = get_object_or_404(TokenDate, user_uuid=user_uuid)
         print("long_token_1",long_token)
         long_access_token = long_token.long_time_access_token
@@ -175,7 +179,8 @@ def receive_token(request,user_uuid):
             token_record.short_token_created_date = now().date()
             token_record.long_token_created_date = now().date()
             token_record.save()
-            return JsonResponse({"message": "success", "data": response_data_json})
+
+            return JsonResponse({"message": "success token save", "data": response_data_json})
 
         return JsonResponse({"error": "Access token missing"}, status=400)
 
