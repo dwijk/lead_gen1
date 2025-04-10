@@ -146,7 +146,7 @@ def receive_token(request,user_uuid):
     print("=== receive_token hit ===")
     print("request",request)
     print("Request method:", request.method, "Request headers:", request.headers, "Request body:", request.body)
-    user_data = UserData.objects.filter(user_uuid=user_uuid).first()
+    user_data = UserData.objects.filter(uuid=user_uuid).first()
     print("user_data",user_data)
     app_id = user_data.app_id
     print("app_id", app_id)
