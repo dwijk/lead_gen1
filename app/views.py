@@ -144,12 +144,17 @@ def facebook_callback(request,user_uuid):
 @csrf_exempt
 def receive_token(request,user_uuid):
     print("=== receive_token hit ===")
+    print("request",request)
     print("Request method:", request.method, "Request headers:", request.headers, "Request body:", request.body)
     user_data = UserData.objects.filter(user_uuid=user_uuid).first()
+    print("user_data",user_data)
     app_id = user_data.app_id
+    print("app_id", app_id)
     app_secret_key = user_data.app_secret_key
+    print("app_secret_key", app_secret_key)
     if request.method == "POST":
-        data = json.loads(request.body)
+        data = json.loads(request.body.decode('utf-8'))
+        print("data", data)
         short_access_token = data.get("access_token")
         print("short_access_token", short_access_token)
         if short_access_token:
