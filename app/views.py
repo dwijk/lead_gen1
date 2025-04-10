@@ -182,8 +182,11 @@ def receive_token(request,user_uuid):
             print("response_data",response_data)
             response_data_json = response_data.json()
             print("lead data", response_data_json)
-            token_record = TokenDate.objects.get_or_create(user_uuid=user_uuid)
-
+            # token_record = TokenDate.objects.get_or_create(user_uuid=user_uuid)
+            user_instance = UserData.objects.get(uuid=user_uuid)
+            print("user_instance",user_instance)
+            token_record, created = TokenDate.objects.get_or_create(user_uuid=user_instance)
+            print("token_record",token_record)
             # Update tokens and dates
             token_record.short_time_access_token = short_access_token
             token_record.long_time_access_token = long_access_token
