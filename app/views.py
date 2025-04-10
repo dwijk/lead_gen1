@@ -110,7 +110,7 @@ def lead_to_data(request,lead_id,user_uuid):
     return response_data
     
 def facebook_login_redirect(request,user_uuid):
-    user_data = UserData.objects.filter(user_uuid=user_uuid).first()
+    user_data = UserData.objects.filter(uuid=user_uuid).first()
     print("user data", user_data)
     app_id = user_data.app_id
     print("app_id", app_id)
