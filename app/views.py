@@ -120,13 +120,13 @@ def facebook_login_redirect(request,user_uuid):
     base_url = "https://www.facebook.com/v19.0/dialog/oauth"
     params = {
         "client_id": app_id,
-        "redirect_uri": f"https://lead-gen1.vercel.app/app/auth/facebook/callback/",
+        "redirect_uri": f"https://lead-gen1.vercel.app/app/auth/facebook/callback/{user_uuid}/",
         "scope": "pages_show_list,leads_retrieval,pages_read_engagement",
-        "response_type": "code",
+        "response_type": "token",
         "state": str(user_uuid),
     }
     facebook_url = f"{base_url}?{urlencode(params)}"
-    print("after redirect in fackebook Url",facebook_url)
+    print("after redirect in fackebook Url", facebook_url)
     return redirect(facebook_url)
 
 
@@ -137,7 +137,7 @@ def facebook_callback(request,user_uuid):
     print("code")
     print(code)
     user_uuid = request.GET.get("state")
-    print("user",user_uuid)
+    print("user")
     return render(request, "facebook_callback.html", {"user_uuid":user_uuid})
 
 
