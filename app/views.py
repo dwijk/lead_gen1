@@ -84,19 +84,52 @@ def facebook_webhook(request,user_uuid):
             print("Error:", str(e))
             return JsonResponse({"error": "Server error", "details": str(e)}, status=500)
 
+def fetch_lead_data(lead_id,long_access_token):
+    url = f"https://graph.facebook.com/v22.0/{lead_id}?access_token={long_access_token}"
+    response = requests.get(url)
+    response_json = response.json()
+    print("fetch_lead_data_response",response_json)
+    return response_json
+
 
 def lead_to_data(lead_id,user_uuid):
     long_token = get_object_or_404(TokenDate, user_uuid=user_uuid)
-    token = long_token.long_time_access_token
-    # PAGE_ACCESS_TOKEN = "EAAH9kwN6EEUBOyFlF1JCYmIbikN5BvNRN9jHyf7ZCh3ocT8kBwZBlZAjcuslEccqAtjPRFHxHQzsIKhZCaHkJBG9GQSmZB85lRFcbugn4YbJL00R1EtSJj3FlAv0tbNVY0sTjTfk3YSXi5SJdNuGySyjaXaVZAePROzBnjaGzoFXnxGFW7jTmssmfltdJn88S9A9ZCVZCKQijHdu5d3jdrrq0s429QZDZD"
-    url = f"https://graph.facebook.com/v22.0/{lead_id}?access_token={token}"
-    response = requests.get(url)
-    print("response",response)
-    response_json = response.json()
-    print("resonse_json",response_json)
-    return response_json
+    long_access_token = long_token.long_time_access_token
+    print("long_access_token",long_access_token)
+    if not long_access_token:
+        print("in if")
+        facebook_login_redirect(user_uuid)
+        long_token = get_object_or_404(TokenDate, user_uuid=user_uuid)
+        print("long_token_1",long_token)
+        long_access_token = long_token.long_time_access_token
+        print("long_access_token",long_access_token)
+        reponse_data = fetch_lead_data(lead_id,long_access_token)
+        return reponse_data
+    # url = f"https://graph.facebook.com/v22.0/{lead_id}?access_token={access_token}"
+    # response = requests.get(url)
+    # print("response",response)
+    # response_json = response.json()
+    response_data = fetch_lead_data(lead_id,long_access_token)
+    print("resonse_json",response_data)
+    return response_data
     
-    
+def facebook_login_redirect(request,user_uuid):
+    user_data = UserData.objects.filter(user_uuid=user_uuid).first()
+    print("user data", user_data)
+    app_id = user_data.app_id
+    print("app_id", app_id)
+    base_url = "https://www.facebook.com/v19.0/dialog/oauth"
+    params = {
+        "client_id": app_id,
+        "redirect_uri": "https://lead-gen1.vercel.app/app/auth/facebook/callback/",
+        "scope": "pages_show_list,leads_retrieval,pages_read_engagement",
+        "response_type": "token"
+    }
+    facebook_url = f"{base_url}?{urlencode(params)}"
+    return redirect(facebook_url)
+
+
+
 def facebook_callback(request,user_uuid):
     print("facebook_callback")
     return render(request, "facebook_callback.html", {"user_uuid":user_uuid})
@@ -106,31 +139,14 @@ def facebook_callback(request,user_uuid):
 def receive_token(request,user_uuid):
     print("=== receive_token hit ===")
     print("Request method:", request.method, "Request headers:", request.headers, "Request body:", request.body)
-    # token_data = TokenDate.objects.filter(user_uuid=user_uuid).first()
-    # print("token_data", token_data)
-    # access_token = token_data.long_time_access_token
-    # print("access", access_token)
     user_data = UserData.objects.filter(user_uuid=user_uuid).first()
     app_id = user_data.app_id
     app_secret_key = user_data.app_secret_key
     if request.method == "POST":
         data = json.loads(request.body)
-        # short_access_token = data.get("access_token")
-        short_access_token = "560282837061701|FAtCDEtvlVCZa3n_OdRYzOf376Y"
+        short_access_token = data.get("access_token")
         print("short_access_token", short_access_token)
         if short_access_token:
-            
-            # token_valid_url = "https://graph.facebook.com/debug_token"
-            # token_info_params = {
-                
-            #     "input_token":access_token,
-            #     "access_token":f"{app_id}|{app_secret_key}"  # app_id|app_secret_key
-            # }
-            # response_token_valid = requests.get(token_valid_url, params=token_info_params)
-            # response_token_valid_json = response_token_valid.json()
-            # print("resposnse_token_valid_json",response_token_valid_json)
-            # print("is_valid",response_token_valid_json.get('data').get('is_valid'))
-            # if not response_token_valid_json.get('data').get('is_valid'):
             request.session["fb_access_token"] = short_access_token
             long_term_url = "https://graph.facebook.com/v18.0/oauth/access_token"
             params = {
@@ -168,22 +184,6 @@ def receive_token(request,user_uuid):
         return JsonResponse({"error": "Access token missing"}, status=400)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
-
-
-def facebook_login_redirect(request,user_uuid):
-    user_data = UserData.objects.filter(user_uuid=user_uuid).first()
-    print("user data", user_data)
-    app_id = user_data.app_id
-    print("app_id", app_id)
-    base_url = "https://www.facebook.com/v19.0/dialog/oauth"
-    params = {
-        "client_id": app_id,
-        "redirect_uri": "https://lead-gen1.vercel.app/app/auth/facebook/callback/",
-        "scope": "pages_show_list,leads_retrieval,pages_read_engagement",
-        "response_type": "token"
-    }
-    facebook_url = f"{base_url}?{urlencode(params)}"
-    return redirect(facebook_url)
 
 
 
