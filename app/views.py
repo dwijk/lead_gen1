@@ -72,8 +72,6 @@ def facebook_webhook(request,user_uuid):
             print("lead_data",lead_data)
             # user_instance = get_object_or_404(UserData, uuid=user_uuid)
             user_instance = UserData.objects.filter(user_uuid=user_uuid).first()
-            if user_instance is None:
-                facebook_login_redirect(request,user_uuid )
             print("user_instance",user_instance)
             lead_instance = LeadgenData.objects.create(lead_id=lead_id,user_uuid=user_instance, lead_data=lead_data.get('field_data'))
             print("lead_instance",lead_instance)
@@ -118,14 +116,16 @@ def facebook_login_redirect(request,user_uuid):
     print("user data", user_data)
     app_id = user_data.app_id
     print("app_id", app_id)
+    print("befor redirect in fackebook Url")
     base_url = "https://www.facebook.com/v19.0/dialog/oauth"
     params = {
         "client_id": app_id,
-        "redirect_uri": "https://lead-gen1.vercel.app/app/auth/facebook/callback/",
+        "redirect_uri": f"https://lead-gen1.vercel.app/app/auth/facebook/callback/{user_uuid}",
         "scope": "pages_show_list,leads_retrieval,pages_read_engagement",
         "response_type": "token"
     }
     facebook_url = f"{base_url}?{urlencode(params)}"
+    print("after redirect in fackebook Url")
     return redirect(facebook_url)
 
 
