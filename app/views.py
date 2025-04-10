@@ -71,7 +71,7 @@ def facebook_webhook(request,user_uuid):
             lead_data = lead_to_data(request,lead_id,user_uuid)
             print("lead_data",lead_data)
             # user_instance = get_object_or_404(UserData, uuid=user_uuid)
-            user_instance = UserData.objects.filter(user_uuid=user_uuid).first()
+            user_instance = UserData.objects.filter(uuid=user_uuid).first()
             print("user_instance",user_instance)
             lead_instance = LeadgenData.objects.create(lead_id=lead_id,user_uuid=user_instance, lead_data=lead_data.get('field_data'))
             print("lead_instance",lead_instance)
