@@ -137,7 +137,7 @@ def facebook_callback(request,user_uuid):
     print("code")
     print(code)
     # user_uuid = request.GET.get("state")
-    print("user")
+    print("user", user_uuid)
     return render(request, "facebook_callback.html", {"user_uuid":user_uuid})
 
 
