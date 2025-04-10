@@ -126,7 +126,7 @@ def facebook_login_redirect(request,user_uuid):
         "state": str(user_uuid),
     }
     facebook_url = f"{base_url}?{urlencode(params)}"
-    print("after redirect in fackebook Url")
+    print("after redirect in fackebook Url",facebook_url)
     return redirect(facebook_url)
 
 
