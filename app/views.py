@@ -107,7 +107,8 @@ def lead_to_data(request,lead_id,user_uuid):
         print("long_access_token",long_access_token)
         reponse_data = fetch_lead_data(lead_id,long_access_token)
         return reponse_data
-    response_data = fetch_lead_data(lead_id,long_access_token)
+    l_t = long_token.long_access_token
+    response_data = fetch_lead_data(lead_id,l_t)
     print("resonse_json",response_data)
     return response_data
     
