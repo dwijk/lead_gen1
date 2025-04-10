@@ -93,7 +93,7 @@ def fetch_lead_data(lead_id,long_access_token):
 
 
 def lead_to_data(lead_id,user_uuid):
-    long_token = get_object_or_404(TokenDate, user_uuid=user_uuid)
+    long_token = TokenDate.objects.filter(user_uuid=user_uuid).first()
     long_access_token = long_token.long_time_access_token
     print("long_access_token",long_access_token)
     if not long_access_token:
