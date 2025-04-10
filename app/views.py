@@ -184,15 +184,23 @@ def receive_token(request,user_uuid):
             print("lead data", response_data_json)
             # token_record = TokenDate.objects.get_or_create(user_uuid=user_uuid)
             user_instance = UserData.objects.get(uuid=user_uuid)
-            print("user_instance",user_instance)
-            token_record, created = TokenDate.objects.get_or_create(user_uuid=user_instance)
-            print("token_record",token_record)
-            # Update tokens and dates
-            token_record.short_time_access_token = short_access_token
-            token_record.long_time_access_token = long_access_token
-            token_record.short_token_created_date = now().date()
-            token_record.long_token_created_date = now().date()
-            token_record.save()
+
+            token_record, created = TokenDate.objects.get_or_create(
+                user_uuid=user_instance,
+                defaults={
+                    "short_time_access_token": short_access_token,
+                    "long_time_access_token": long_access_token,
+                    "short_token_created_date": now().date(),
+                    "long_token_created_date": now().date(),
+                }
+            )
+
+            if not created:
+                token_record.short_time_access_token = short_access_token
+                token_record.long_time_access_token = long_access_token
+                token_record.short_token_created_date = now().date()
+                token_record.long_token_created_date = now().date()
+                token_record.save()
 
             return JsonResponse({"message": "success token save", "data": response_data_json})
 
