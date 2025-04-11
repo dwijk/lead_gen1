@@ -14,6 +14,8 @@ import requests
 from urllib.parse import urlencode
 from django.shortcuts import redirect
 from .models import DataStore, LeadgenData, TokenDate,UserData
+import urllib.parse
+
 # load_dotenv()
         
 
@@ -113,22 +115,23 @@ def lead_to_data(request,lead_id,user_uuid):
     return response_data
     
 def facebook_login_redirect(request,user_uuid):
+    redirect_url = request.GET.get('redirect_url')
+    print("redirect_url",redirect_url, user_uuid)
     user_data = UserData.objects.filter(uuid=user_uuid).first()
-    print("user data", user_data)
     app_id = user_data.app_id
-    print("app_id", app_id)
-    print("befor redirect in fackebook Url")
-    base_url = "https://www.facebook.com/v19.0/dialog/oauth"
+    full_redirect_uri = f"{redirect_url}{user_uuid}/"
+    base_url = "https://www.facebook.com/v18.0/dialog/oauth"
     params = {
         "client_id": app_id,
-        "redirect_uri": f"https://lead-gen1.vercel.app/app/auth/facebook/callback/{user_uuid}/",
+        "redirect_uri": full_redirect_uri,
         "scope": "pages_show_list,leads_retrieval,pages_read_engagement",
         "response_type": "token",
         "state": str(user_uuid),
     }
     facebook_url = f"{base_url}?{urlencode(params)}"
-    print("after redirect in fackebook Url", facebook_url)
-    return redirect(facebook_url)
+    decode_url = urllib.parse.unquote(facebook_url)
+    print("decode",decode_url)
+    return JsonResponse({"url": decode_url})
 
 
 
