@@ -103,7 +103,7 @@ def facebook_webhook(request,user_uuid):
             print("lead_id",lead_id)
             lead_data = lead_to_data(request,lead_id,user_uuid)
             print("lead_data",lead_data)
-            save_lead_info_from_response(payload,user_uuid)
+            save_lead_info_from_response(lead_data, user_uuid)
             print("save_lead_info_from_response",save_lead_info_from_response)
             user_instance = get_object_or_404(UserData, uuid=user_uuid)
             user_instance = UserData.objects.filter(uuid=user_uuid).first()

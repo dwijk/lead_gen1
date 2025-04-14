@@ -158,7 +158,7 @@ JAZZMIN_SETTINGS = {
     "site_brand": "My Brand",
     "welcome_sign": "Welcome to My Admin Panel",
     "copyright": "My Company",
-    "search_model": ["auth.User", "yourapp.YourModel"],
+    "search_model": ["auth.User", "app.UserData"],
 
     "topmenu_links": [
         {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
