@@ -5,7 +5,7 @@ urlpatterns = [
     path('hello/', HelloWorldView.as_view(), name='hello_world'),
     path('webhook/facebook/<uuid:user_uuid>/', facebook_webhook, name='facebook_webhook'),
     
-    # redirect url then call
+    # redirect url then call for access token
     path('auth/facebook/callback/<uuid:user_uuid>/', facebook_callback, name='facebook_callback'),
     
     # after redirect this url hit

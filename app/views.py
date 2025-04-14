@@ -13,7 +13,7 @@ from django.utils.timezone import now
 import requests
 from urllib.parse import urlencode
 from django.shortcuts import redirect
-from .models import DataStore, LeadgenData, TokenDate,UserData
+from .models import DataStore, LeadgenData, TokenDate,UserData, UserLeadInfo
 import urllib.parse
 
 # load_dotenv()
@@ -41,7 +41,40 @@ class HelloWorldView(APIView):
         return Response({"message": "Hello World"}, status=status.HTTP_200_OK)
     
 
+def get_valid_lead_fields():
+    return {field.name for field in UserLeadInfo._meta.fields}
 
+# Step 2: Parse the API response and clean data
+def parse_field_data(field_data):
+    data = {}
+    for item in field_data:
+        name = item.get("name")
+        values = item.get("values")
+        if name and values:
+            data[name] = values[0]  # Take the first value from list
+    return data
+
+# Step 3: Save lead info using kwargs
+def save_lead_info_from_response(response, user_uuid):
+    field_data = response.get("field_data", [])
+    print("fields_data",field_data)
+    data = parse_field_data(field_data)
+    print("data",data)
+
+    # Ensure only valid model fields are included
+    valid_fields = get_valid_lead_fields()
+    print("valid_fields",valid_fields)
+    cleaned_data = {k: v for k, v in data.items() if k in valid_fields}
+    print("cleaned_data",cleaned_data)
+    # Add required foreign key
+    cleaned_data["user_uuid"] = user_uuid
+    user_instance = UserData.objects.get(uuid=user_uuid)
+
+    # Update cleaned_data to contain the instance instead of UUID
+    cleaned_data["user_uuid"] = user_instance
+    # Save the object
+    lead = UserLeadInfo.objects.create(**cleaned_data)
+    return True
 # VERIFY_TOKEN = os.getenv("FB_VERIFY_TOKEN", "your_custom_verify_token")
 VERIFY_TOKEN = 'a2c75548ce868a44d4ed57164be29362054e0b4f83e135ad3c67b27319456498'  # Replace with your actual verify token
 
@@ -50,8 +83,6 @@ VERIFY_TOKEN = 'a2c75548ce868a44d4ed57164be29362054e0b4f83e135ad3c67b27319456498
 def facebook_webhook(request,user_uuid):
     print("here")
     print("user_uuid",user_uuid)
-    user_uuid1 = request.GET.get("uuid")
-    print("uuid",user_uuid1)
     if request.method == "GET":
 
         mode = request.GET.get("hub.mode")
@@ -72,11 +103,13 @@ def facebook_webhook(request,user_uuid):
             print("lead_id",lead_id)
             lead_data = lead_to_data(request,lead_id,user_uuid)
             print("lead_data",lead_data)
-            # user_instance = get_object_or_404(UserData, uuid=user_uuid)
+            save_lead_info_from_response(payload,user_uuid)
+            print("save_lead_info_from_response",save_lead_info_from_response)
+            user_instance = get_object_or_404(UserData, uuid=user_uuid)
             user_instance = UserData.objects.filter(uuid=user_uuid).first()
             print("user_instance",user_instance)
-            lead_instance = LeadgenData.objects.create(lead_id=lead_id,user_uuid=user_instance, lead_data=lead_data.get('field_data'))
-            print("lead_instance",lead_instance)
+            # lead_instance = LeadgenData.objects.create(lead_id=lead_id,user_uuid=user_instance, lead_data=lead_data.get('field_data'))
+            # print("lead_instance",lead_instance)
 
             return JsonResponse({"status": "received",
                                 "id": data_instance.id}, status=200)
