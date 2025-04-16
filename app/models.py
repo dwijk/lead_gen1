@@ -60,14 +60,6 @@ class UserLeadInfo(models.Model):
 
 
 
-class LeadgenData(models.Model):
-    lead_id = models.CharField(max_length=50, unique=True)
-    user_uuid = models.ForeignKey(UserData, on_delete=models.CASCADE)
-    lead_data = models.JSONField()
-    
-
-
-
 class TokenDate(models.Model):
     user_uuid = models.ForeignKey(UserData, on_delete=models.CASCADE)
     short_time_access_token = models.CharField(max_length=512, unique=True)
@@ -86,3 +78,93 @@ class UserFieldAccess(models.Model):
 
     # def __str__(self):
     #     return f"{self.user} Field Access"
+
+
+
+class Campaign(models.Model):
+    # Campaign data based on the API response
+    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    campaign_id = models.CharField(max_length=50, unique=True,null=True, blank=True)
+    name = models.CharField(max_length=200)
+    effective_status = models.CharField(max_length=20, choices=[
+        ('ACTIVE', 'Active'),
+        ('PAUSED', 'Paused'),
+        ('DELETED', 'Deleted'),
+    ])
+    objective = models.CharField(max_length=100, null=True, blank=True)
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
+    budget_remaining = models.BigIntegerField(null=True, blank=True)
+    daily_budget = models.BigIntegerField(null=True, blank=True)
+    lifetime_budget = models.BigIntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Campaign: {self.name}"
+
+class GeoLocation(models.Model):
+    country = models.CharField(max_length=10 ,null=True, blank=True)
+
+class Interest(models.Model):
+    fb_id = models.CharField(max_length=50 ,null=True, blank=True)
+    name = models.CharField(max_length=100 ,null=True, blank=True)
+
+class Targeting(models.Model):
+    age_min = models.IntegerField(null=True, blank=True)
+    age_max = models.IntegerField(null=True, blank=True)
+    genders = models.JSONField(null=True, blank=True)
+    geo_locations = models.ManyToManyField(GeoLocation)
+    interests = models.ManyToManyField(Interest)
+
+class PromotedObject(models.Model):
+    page_id = models.CharField(max_length=50 ,null=True, blank=True)
+    custom_event_type = models.CharField(max_length=50 ,null=True, blank=True)
+
+class AdSet(models.Model):
+    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    adset_id = models.CharField(max_length=50, unique=True,null=True, blank=True)
+    name = models.CharField(max_length=255 ,null=True, blank=True)
+    campaign_id = models.ForeignKey(Campaign, related_name='campaign_id_campaign', on_delete=models.CASCADE,null=True, blank=True)
+    account_id = models.CharField(max_length=50 ,null=True, blank=True)
+    status = models.CharField(max_length=50 ,null=True, blank=True)
+    daily_budget = models.CharField(max_length=20 ,null=True, blank=True)
+    lifetime_budget = models.CharField(max_length=20 ,null=True, blank=True)
+    budget_remaining = models.CharField(max_length=20 ,null=True, blank=True)
+    bid_amount = models.CharField(max_length=20 ,null=True, blank=True)
+    bid_strategy = models.CharField(max_length=100 ,null=True, blank=True)
+    billing_event = models.CharField(max_length=50 ,null=True, blank=True)
+    optimization_goal = models.CharField(max_length=100 ,null=True, blank=True)
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
+    destination_type = models.CharField(max_length=50 ,null=True, blank=True)
+    targeting = models.OneToOneField(Targeting, on_delete=models.CASCADE, null=True, blank=True)
+    promoted_object = models.OneToOneField(PromotedObject, on_delete=models.CASCADE, null=True, blank=True)
+
+class Ad(models.Model):
+    # Ad data for a specific ad set
+    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    ad_set = models.ForeignKey(AdSet, related_name='ad_set_adset', on_delete=models.CASCADE)
+    ad_id = models.CharField(max_length=50, unique=True,null=True, blank=True)
+    account_id = models.CharField(max_length=50, unique=True,null=True, blank=True)
+    name = models.CharField(max_length=255 ,null=True, blank=True)
+    status = models.CharField(max_length=20, choices=[
+        ('ACTIVE', 'Active'),
+        ('PAUSED', 'Paused'),
+        ('DELETED', 'Deleted'),
+    ])
+    destination_set_id = models.CharField(max_length=255 ,null=True, blank=True)
+    conversion_domain = models.CharField(max_length=255 ,null=True, blank=True)
+
+
+    def __str__(self):
+        return f"Ad: {self.name}"
+    
+
+
+
+class LeadgenData(models.Model):
+    lead_id = models.CharField(max_length=50, unique=True)
+    ad_id = models.ForeignKey(Ad, related_name='ad_id_ad', on_delete=models.CASCADE, null=True, blank=True)
+ 
+    user_uuid = models.ForeignKey(UserData, on_delete=models.CASCADE)
+    lead_data = models.JSONField()
+    

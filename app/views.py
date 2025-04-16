@@ -13,8 +13,10 @@ from django.utils.timezone import now
 import requests
 from urllib.parse import urlencode
 from django.shortcuts import redirect
-from .models import DataStore, LeadgenData, TokenDate,UserData, UserLeadInfo
+from .models import DataStore, LeadgenData, TokenDate,UserData, UserLeadInfo, AdSet, Ad, Campaign, GeoLocation,Interest,Targeting,PromotedObject
 import urllib.parse
+from django.utils.dateparse import parse_datetime
+from django.db.models import Prefetch
 
 # load_dotenv()
         
@@ -75,6 +77,272 @@ def save_lead_info_from_response(response, user_uuid):
     # Save the object
     lead = UserLeadInfo.objects.create(**cleaned_data)
     return True
+
+def adset_to_campaign(adset_id):
+    url = f"https://graph.facebook.com/v22.0/{adset_id}?fields=campaign_id&access_token={long_access_token}"
+    response = requests.get(url)
+    # response_json = response.json()
+    response_json = {
+  "campaign_id": "1122334455667788",
+  "id": "1234567890123456"
+}
+
+    campaign_id = response_json.get('campaign_id')
+    print("campaign_id",campaign_id)
+    campaign = Campaign.objects.filter(campaign_id=campaign_id).first()
+    if not campaign:
+        print("in if campaign_data")
+        campaign_url = f"https://graph.facebook.com/v22.0/{campaign_id}?fields=id,name,status,budget_remaining,objective,start_time,stop_time,daily_budget,lifetime_budget&access_token={long_access_token}"
+        campaign_response = requests.get(campaign_url)
+        # campaign_data = campaign_response.json()
+        campaign_data = {
+            "id": "1122334455667788",
+            "name": "My Campaign",
+            "status": "ACTIVE",
+            "budget_remaining": "1000000",
+            "objective": "LEAD_GENERATION",
+            "start_time": "2025-04-01T00:00:00+0000",
+            "stop_time": "2025-04-30T23:59:59+0000",
+            "daily_budget": "50000",
+            "lifetime_budget": "1500000"
+            }
+
+        # Extract data with safe defaults
+        name = campaign_data.get('name')
+        status = campaign_data.get('status')
+        budget_remaining = campaign_data.get('budget_remaining') or 0
+        objective = campaign_data.get('objective')
+        start_time = campaign_data.get('start_time')
+        stop_time = campaign_data.get('stop_time')
+        daily_budget = campaign_data.get('daily_budget') or 0
+        lifetime_budget = campaign_data.get('lifetime_budget') or 0
+
+        # Step 4: Create and save campaign
+        campaign = Campaign.objects.create(
+            campaign_id=campaign_id,
+            name=name,
+            effective_status=status,
+            budget_remaining=budget_remaining,
+            objective=objective,
+            start_time=start_time,
+            stop_time=stop_time,
+            daily_budget=daily_budget,
+            lifetime_budget=lifetime_budget
+        )
+        print("campaign",campaign)
+    return campaign
+    
+def adid_to_adset(ad_id):
+    url = f"https://graph.facebook.com/v22.0/{ad_id}?fields=adset_id&access_token={long_access_token}"
+    response = requests.get(url)
+    # response_json = response.json()
+    response_json = {
+        "adset_id": "123456789012345",
+        "id": "987654321098765"
+        }       
+    adset_id = response_json.get('adset_id')
+    print("adset_id",adset_id)
+    # check_adset_id = AdSet.objects.filter(ad_set_id=adset_id).first()
+    check_adset_id = AdSet.objects.select_related(
+        'targeting', 'promoted_object', 'campaign_id'
+    ).prefetch_related(
+        Prefetch('targeting__geo_locations'),
+        Prefetch('targeting__interests')
+    ).filter(adset_id=adset_id).first()
+    print("check_adset",check_adset_id)
+    if not check_adset_id:
+        print("check_adset_id not found")
+        campaign_data = adset_to_campaign(adset_id)
+        print("campaign",campaign_data)
+        url = f"https://graph.facebook.com/v19.0/{adset_id}?fields=id,name,campaign_id,account_id,status,daily_budget,lifetime_budget,budget_remaining,bid_amount,bid_strategy,billing_event,optimization_goal,start_time,end_time,destination_type,targeting{{age_min,age_max,genders,geo_locations{{countries}},interests{{id,name}}}},promoted_object{{page_id,custom_event_type}}&access_token={access_token}"
+        response = requests.get(url)
+        # data = response.json()
+        data = {
+            "id": "23847619012345678",
+            "name": "Ad Set 1",
+            "campaign_id": "120394857601234",
+            "account_id": "act_1234567890",
+            "status": "ACTIVE",
+            "daily_budget": "10000",
+            "lifetime_budget": "500000",
+            "budget_remaining": "450000",
+            "bid_amount": 200,
+            "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+            "billing_event": "IMPRESSIONS",
+            "optimization_goal": "LEAD_GENERATION",
+            "start_time": "2025-04-10T00:00:00+0000",
+            "end_time": "2025-04-30T23:59:00+0000",
+            "destination_type": "WEBSITE",
+            "targeting": {
+                "age_min": 25,
+                "age_max": 45,
+                "genders": [1],
+                "geo_locations": {
+                "countries": ["US"]
+                },
+                "interests": [
+                {
+                    "id": "6003139266461",
+                    "name": "Technology"
+                },
+                {
+                    "id": "6003337891234",
+                    "name": "Startups"
+                }
+                ]
+            },
+            "promoted_object": {
+                "page_id": "123456789012345",
+                "custom_event_type": "LEAD"
+            }
+            }
+
+        geo_objs = []
+        interest_objs = []
+
+        if 'targeting' in data:
+            targeting_data = data['targeting']
+
+            # Save countries
+            for country in targeting_data.get("geo_locations", {}).get("countries", []):
+                geo, _ = GeoLocation.objects.get_or_create(country=country)
+                geo_objs.append(geo)
+            print("geo_objs",geo_objs)
+            # Save interests
+            for interest in targeting_data.get("interests", []):
+                i, _ = Interest.objects.get_or_create(fb_id=interest["id"], name=interest["name"])
+                interest_objs.append(i)
+            print("interest_objs",interest_objs)
+            targeting = Targeting.objects.create(
+                age_min=targeting_data.get("age_min", 0),
+                age_max=targeting_data.get("age_max", 0),
+                genders=targeting_data.get("genders", [])
+            )
+            targeting.geo_locations.set(geo_objs)
+            targeting.interests.set(interest_objs)
+            print("targeting",targeting)
+        else:
+            targeting = None
+
+        # Promoted Object
+        if "promoted_object" in data:
+            promoted = PromotedObject.objects.create(
+                page_id=data["promoted_object"].get("page_id"),
+                custom_event_type=data["promoted_object"].get("custom_event_type")
+            )
+        else:
+            promoted = None
+
+        # Create AdSet
+        adset, created = AdSet.objects.update_or_create(
+            uuid=data["id"],
+            defaults={
+                "name": data.get("name"),
+                "campaign_id": data.get("campaign_id"),
+                "account_id": data.get("account_id"),
+                "status": data.get("status"),
+                "daily_budget": data.get("daily_budget"),
+                "lifetime_budget": data.get("lifetime_budget"),
+                "budget_remaining": data.get("budget_remaining"),
+                "bid_amount": data.get("bid_amount"),
+                "bid_strategy": data.get("bid_strategy"),
+                "billing_event": data.get("billing_event"),
+                "optimization_goal": data.get("optimization_goal"),
+                "start_time": parse_datetime(data.get("start_time")),
+                "end_time": parse_datetime(data.get("end_time")),
+                "destination_type": data.get("destination_type"),
+                "targeting": targeting,
+                "promoted_object": promoted
+            }
+        )
+        print("adset",adset)
+        return adset
+    # else:
+    #     data = AdSet.objects.filter(ad_set_id=adset_id).first()
+    #     targeting = Targeting
+    #     defaults={
+    #             "name": data.get("name"),
+    #             "campaign_id": data.get("campaign_id"),
+    #             "account_id": data.get("account_id"),
+    #             "status": data.get("status"),
+    #             "daily_budget": data.get("daily_budget"),
+    #             "lifetime_budget": data.get("lifetime_budget"),
+    #             "budget_remaining": data.get("budget_remaining"),
+    #             "bid_amount": data.get("bid_amount"),
+    #             "bid_strategy": data.get("bid_strategy"),
+    #             "billing_event": data.get("billing_event"),
+    #             "optimization_goal": data.get("optimization_goal"),
+    #             "start_time": parse_datetime(data.get("start_time")),
+    #             "end_time": parse_datetime(data.get("end_time")),
+    #             "destination_type": data.get("destination_type"),
+    #             "targeting": targeting,
+    #             "promoted_object": promoted
+    #         }
+        
+
+
+
+
+
+
+def lead_to_ad_id(lead_Data,long_access_token):
+    # This function will be used to convert the lead data into ad data
+    url = f"https://graph.facebook.com/v22.0/{lead_id}?fields=ad_id,form_id,created_time,field_data&access_token={long_access_token}"
+    response = requests.get(url)
+    # response_json = response.json()
+    response_json = {
+        "id": "123456789012345",
+        "ad_id": "1111222233334444",
+        "form_id": "5555666677778888",
+        "created_time": "2025-04-15T10:20:30+0000",
+        "field_data": [
+            {
+            "name": "full_name",
+            "values": ["John Doe"]
+            },
+            {
+            "name": "email",
+            "values": ["john.doe@example.com"]
+            }
+        ]
+        }
+    
+    ad_id = response_json.get('ad_id')
+    check_ad_id = Ad.objects.filter(ad_id=ad_id).first()
+    if not check_ad_id:
+        print("check_ad_id not found")
+        ad_set_data = adid_to_adset(ad_id, long_access_token)
+        print("ad_set_data",ad_set_data)
+        adset_id = ad_set_data.get('adset_id')
+        url = f"https://graph.facebook.com/v19.0/{ad_id}?fields=id,name,adset_id,campaign_id,account_id,configured_status,effective_status,status,destination_set_id,conversion_domain&access_token={long_access_token}"
+        response = requests.get(url)
+        # data = response.json()
+        data = {
+            "id": "1234567890",
+            "name": "Ad Name",
+            "adset_id": "2345678901",
+            "campaign_id": "3456789012",
+            "account_id": "act_4567890123",
+            "status": "PAUSED",
+            "destination_set_id": "ds_5678901234",
+            "conversion_domain": "yourdomain.com"
+            }
+        adset_instance = AdSet.objects.get(adset_id=adset_id)
+
+        # Create the Ad record
+        ad = Ad.objects.create(
+            ad_set=adset_instance,
+            ad_id=data["id"],
+            account_id=data["account_id"],
+            name=data.get("name"),
+            status=data["status"],
+            destination_set_id=data.get("destination_set_id"),
+            conversion_domain=data.get("conversion_domain")
+        )
+
+        print("ad",ad)
+    return response_json
+
 # VERIFY_TOKEN = os.getenv("FB_VERIFY_TOKEN", "your_custom_verify_token")
 VERIFY_TOKEN = 'a2c75548ce868a44d4ed57164be29362054e0b4f83e135ad3c67b27319456498'  # Replace with your actual verify token
 
@@ -97,12 +365,30 @@ def facebook_webhook(request,user_uuid):
         print("post")
         try:
             payload = json.loads(request.body)
+            # payload = {'entry': 
+            #            [
+            #                {'id': '577946838743303', 
+            #                 'time': 1744706258, 
+            #                 'changes': 
+            #                 [
+            #                     {'value': {'created_time': 1744706254, 
+            #                    'leadgen_id': '985732697074092', 
+            #                    'page_id': '577946838743303', 
+            #                    'form_id': '1014913513600972'}, 
+            #                    'field': 'leadgen'
+            #                    }
+            #                 ]
+            #                }
+            #             ],
+            #                      'object': 'page'}
             print("payload",payload)
             data_instance = DataStore.objects.create(name="Lead Data", data=payload)
             lead_id = payload.get('entry')[0].get('changes')[0].get('value').get('leadgen_id')
             print("lead_id",lead_id)
-            lead_data = lead_to_data(request,lead_id,user_uuid)
+            lead_data, l_t = lead_to_data(request,lead_id,user_uuid)
             print("lead_data",lead_data)
+            print("l_t",l_t)
+            from_lead_to_ad = lead_to_ad_id(lead_id,l_t)
             save_lead_info_from_response(lead_data, user_uuid)
             print("save_lead_info_from_response",save_lead_info_from_response)
             user_instance = get_object_or_404(UserData, uuid=user_uuid)
@@ -145,7 +431,7 @@ def lead_to_data(request,lead_id,user_uuid):
     l_t = long_token.long_time_access_token
     response_data = fetch_lead_data(lead_id,l_t)
     print("resonse_json",response_data)
-    return response_data
+    return response_data, l_t
     
 def facebook_login_redirect(request,user_uuid):
     redirect_url = request.GET.get('redirect_url')

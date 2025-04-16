@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import DataStore, LeadgenData, UserData, TokenDate, UserLeadInfo, UserFieldAccess
+from .models import DataStore, LeadgenData, UserData, TokenDate, UserLeadInfo,GeoLocation, Interest, UserFieldAccess,Ad,AdSet,Campaign,Targeting,PromotedObject
 from django import forms
 
 
@@ -8,6 +8,13 @@ from django import forms
 admin.site.register(DataStore)
 # admin.site.register(UserData)
 admin.site.register(TokenDate)
+admin.site.register(Campaign)
+admin.site.register(GeoLocation)
+admin.site.register(Interest)
+admin.site.register(Targeting)
+admin.site.register(PromotedObject)
+admin.site.register(AdSet)
+admin.site.register(Ad)
 
 
 
