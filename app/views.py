@@ -435,7 +435,7 @@ def lead_to_data(request,lead_id,user_uuid):
     
 def facebook_login_redirect(request,user_uuid):
     # redirect_url = request.GET.get('redirect_url')
-    redirect_url = "https://lead-gen1.vercel.app/app/webhook/facebook/"
+    redirect_url = "https://lead-gen1.vercel.app/app/auth/facebook/callback/"
 
     print("redirect_url",redirect_url, user_uuid)
     user_data = UserData.objects.filter(uuid=user_uuid).first()
