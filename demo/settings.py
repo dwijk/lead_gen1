@@ -25,7 +25,7 @@ DEBUG = False
 ALLOWED_HOSTS = ["*"]
 # ALLOWED_HOSTS = ['.vercel.app', '.now.sh','vercel.app']
 
-
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Application definition
 
 INSTALLED_APPS = [
@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "app",
+    "django_cron",
 ]
 
 MIDDLEWARE = [
@@ -171,3 +172,8 @@ JAZZMIN_SETTINGS = {
         "yourapp.YourModel": "fas fa-database",
     },
 }
+
+
+CRONJOBS = [
+    ('*/1 * * * *', 'app.cron.MyCronJob')
+]

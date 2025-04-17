@@ -29,6 +29,9 @@ class DataStore(models.Model):
 class UserLeadInfo(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user_uuid = models.ForeignKey(UserData, on_delete=models.CASCADE)
+    lead_id = models.CharField(max_length=100,null=True,blank=True)
+    ad_id = models.CharField(max_length=100,null=True,blank=True)
+    form_name = models.CharField(max_length=100,null=True,blank=True)
     email = models.EmailField(null=True, blank=True)
     phone_number = models.CharField(max_length=20,null=True,blank=True)
     whatsapp_number = models.CharField(max_length=20,null=True,blank=True)
@@ -99,7 +102,7 @@ class Campaign(models.Model):
     lifetime_budget = models.BigIntegerField(null=True, blank=True)
 
     def __str__(self):
-        return f"Campaign: {self.name}"
+        return f"{self.name}"
 
 class GeoLocation(models.Model):
     country = models.CharField(max_length=10 ,null=True, blank=True)
@@ -142,9 +145,9 @@ class AdSet(models.Model):
 class Ad(models.Model):
     # Ad data for a specific ad set
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    ad_set = models.ForeignKey(AdSet, related_name='ad_set_adset', on_delete=models.CASCADE)
     ad_id = models.CharField(max_length=50, unique=True,null=True, blank=True)
-    account_id = models.CharField(max_length=50, unique=True,null=True, blank=True)
+    ad_set = models.ForeignKey(AdSet, related_name='ad_set_adset', on_delete=models.CASCADE)
+    account_id = models.CharField(max_length=50,null=True, blank=True)
     name = models.CharField(max_length=255 ,null=True, blank=True)
     status = models.CharField(max_length=20, choices=[
         ('ACTIVE', 'Active'),

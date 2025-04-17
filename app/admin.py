@@ -8,13 +8,13 @@ from django import forms
 admin.site.register(DataStore)
 # admin.site.register(UserData)
 admin.site.register(TokenDate)
-admin.site.register(Campaign)
+# admin.site.register(Campaign)
 admin.site.register(GeoLocation)
 admin.site.register(Interest)
 admin.site.register(Targeting)
 admin.site.register(PromotedObject)
-admin.site.register(AdSet)
-admin.site.register(Ad)
+# admin.site.register(AdSet)
+# admin.site.register(Ad)
 
 
 
@@ -120,3 +120,180 @@ class UserInfoAdmin(admin.ModelAdmin):
 
 admin.site.register(UserLeadInfo, UserInfoAdmin)
 admin.site.register(UserFieldAccess)
+
+
+class CampaignAdmin(admin.ModelAdmin):
+    def get_fields(self, request, obj=None):
+        all_fields = [f.name for f in self.model._meta.fields if f.editable]
+        print("all_fields",all_fields)
+        try:
+            user_data = UserData.objects.get(user=request.user)
+            print("user_data",user_data)
+            access = UserFieldAccess.objects.get(user=user_data)
+            print("access",access)
+            allowed_fields = access.allowed_fields
+            print("allowed_fields",allowed_fields)
+            return [f for f in all_fields if f in allowed_fields]
+        except (UserData.DoesNotExist, UserFieldAccess.DoesNotExist):
+            return all_fields
+
+    def get_list_display(self, request):
+        fields = self.get_fields(request)
+        print("fields",fields)
+        # excluded = ['uuid']
+        # return [f for f in fields if f not in excluded]
+        return fields
+
+    def get_fieldsets(self, request, obj=None):
+        fields = self.get_fields(request, obj)
+        print("fields2",fields)
+        basic_info = ['campaign_id', 'name', 'effective_status', 'objective']
+        time_info = ['start_time', 'end_time']
+        budget_info = ['budget_remaining', 'daily_budget', 'lifetime_budget']
+
+        fieldsets = []
+
+        def add_fieldset(title, field_list):
+            included = [f for f in field_list if f in fields]
+            if included:
+                fieldsets.append((title, {'fields': included}))
+
+        add_fieldset('Basic Information', basic_info)
+        add_fieldset('Time Period', time_info)
+        add_fieldset('Budget Information', budget_info)
+
+        remaining = [f for f in fields if f not in basic_info + time_info + budget_info]
+        if remaining:
+            fieldsets.append(('Other Fields', {'fields': remaining}))
+
+        return fieldsets
+
+
+admin.site.register(Campaign, CampaignAdmin)
+
+
+
+class AdSetAdmin(admin.ModelAdmin):
+    def get_fields(self, request, obj=None):
+        # Exclude non-editable fields like uuid
+        all_fields = [f.name for f in self.model._meta.fields if f.editable]
+        print("all_fields",all_fields)
+        try:
+            user_data = UserData.objects.get(user=request.user)
+            print("user_data",user_data)
+            access = UserFieldAccess.objects.get(user=user_data)
+            print("access",access)
+            allowed_fields = access.allowed_fields
+            print("allowed_fields",allowed_fields)
+            return [f for f in all_fields if f in allowed_fields]
+        except (UserData.DoesNotExist, UserFieldAccess.DoesNotExist):
+            return all_fields
+
+    def get_list_display(self, request):
+        # Optional: include uuid in list_display even if not editable
+        all_fields = [f.name for f in self.model._meta.fields]
+        print("all_fields2",all_fields)
+
+        try:
+            user_data = UserData.objects.get(user=request.user)
+            print("user_data2",user_data)
+            access = UserFieldAccess.objects.get(user=user_data)
+            print("access2",access)
+            allowed_fields = access.allowed_fields
+            print("allowed_fields2",allowed_fields)
+            return [f for f in all_fields if f in allowed_fields]
+        except (UserData.DoesNotExist, UserFieldAccess.DoesNotExist):
+            return all_fields
+
+    def get_fieldsets(self, request, obj=None):
+        fields = self.get_fields(request, obj)
+        print("fields3",fields)
+
+        basic_info = ['adset_id', 'name', 'campaign_id', 'account_id', 'status']
+        budget_info = ['daily_budget', 'lifetime_budget', 'budget_remaining', 'bid_amount', 'bid_strategy']
+        optimization_info = ['billing_event', 'optimization_goal']
+        time_info = ['start_time', 'end_time']
+        advanced_info = ['destination_type', 'targeting', 'promoted_object']
+
+        fieldsets = []
+
+        def add_fieldset(title, field_list):
+            included = [f for f in field_list if f in fields]
+            if included:
+                fieldsets.append((title, {'fields': included}))
+
+        add_fieldset('Basic Info', basic_info)
+        add_fieldset('Budget & Bidding', budget_info)
+        add_fieldset('Optimization', optimization_info)
+        add_fieldset('Timing', time_info)
+        add_fieldset('Advanced Settings', advanced_info)
+
+        remaining = [f for f in fields if f not in basic_info + budget_info + optimization_info + time_info + advanced_info]
+        if remaining:
+            fieldsets.append(('Other Fields', {'fields': remaining}))
+
+        return fieldsets
+
+
+admin.site.register(AdSet, AdSetAdmin)
+
+
+
+class AdAdmin(admin.ModelAdmin):
+    def get_fields(self, request, obj=None):
+        # Exclude non-editable fields like uuid
+        all_fields = [f.name for f in self.model._meta.fields if f.editable]
+        print("all_fields5",all_fields)
+        try:
+            user_data = UserData.objects.get(user=request.user)
+            print("user_data5",user_data)
+            access = UserFieldAccess.objects.get(user=user_data)
+            print("access5",access)
+            allowed_fields = access.allowed_fields
+            print("allowed_fields5",allowed_fields)
+            return [f for f in all_fields if f in allowed_fields]
+        except (UserData.DoesNotExist, UserFieldAccess.DoesNotExist):
+            return all_fields
+
+    def get_list_display(self, request):
+        all_fields = [f.name for f in self.model._meta.fields]
+        print("all_fields4",all_fields)
+        try:
+            user_data = UserData.objects.get(user=request.user)
+            print("user_data4",user_data)
+            access = UserFieldAccess.objects.get(user=user_data)
+            print("access4",access)
+            allowed_fields = access.allowed_fields
+            print("allowed_fields4",allowed_fields)
+            return [f for f in all_fields if f in allowed_fields]
+        except (UserData.DoesNotExist, UserFieldAccess.DoesNotExist):
+            return all_fields
+
+    def get_fieldsets(self, request, obj=None):
+        fields = self.get_fields(request, obj)
+        print("fields4",fields)
+
+        basic_info = ['ad_id', 'name', 'status', 'ad_set', 'account_id']
+        tracking_info = ['destination_set_id', 'conversion_domain']
+
+        fieldsets = []
+
+        def add_fieldset(title, field_list):
+            included = [f for f in field_list if f in fields]
+            if included:
+                fieldsets.append((title, {'fields': included}))
+
+            print("included4",included)
+        add_fieldset('Basic Info', basic_info)
+        add_fieldset('Tracking Info', tracking_info)
+
+        remaining = [f for f in fields if f not in basic_info + tracking_info]
+        print("remaining4",remaining)
+        if remaining:
+            fieldsets.append(('Other Fields', {'fields': remaining}))
+
+        return fieldsets
+
+
+admin.site.register(Ad, AdAdmin)
+
