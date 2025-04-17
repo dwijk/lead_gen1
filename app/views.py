@@ -361,10 +361,12 @@ def facebook_webhook(request,user_uuid):
             lead_data, long_access_token = lead_to_data(request,lead_id,user_uuid)
             print("lead_data",lead_data)
             print("l_t",long_access_token)
+            ad_id="123232"
+            save_lead_info_from_response(lead_data, user_uuid,lead_id,ad_id,form_id, long_access_token)
             from_lead_to_ad = lead_to_ad_id(lead_data,long_access_token)
             print("Done",from_lead_to_ad)
             ad_id = from_lead_to_ad.ad_id
-            save_lead_info_from_response(lead_data, user_uuid,lead_id,ad_id,form_id, long_access_token)
+            
             print("save_lead_info_from_response",save_lead_info_from_response)
             user_instance = get_object_or_404(UserData, uuid=user_uuid)
             user_instance = UserData.objects.filter(uuid=user_uuid).first()
