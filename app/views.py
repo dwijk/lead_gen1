@@ -81,7 +81,7 @@ def save_lead_info_from_response(response, user_uuid,lead_id,ad_id, form_id, lon
     lead_data = LeadgenData.objects.filter(lead_id=lead_id).first()
     # Update cleaned_data to contain the instance instead of UUID
     cleaned_data["user_uuid"] = user_instance
-    cleaned_data["lead_id"] = lead_data.get('lead_id')
+    cleaned_data["lead_id"] = lead_data.lead_id
     cleaned_data["ad_id"] = ad_id
     form_name = formid_to_name(form_id,long_access_token)
     cleaned_data["form_name"] = form_name
@@ -361,8 +361,6 @@ def facebook_webhook(request,user_uuid):
             lead_data, long_access_token = lead_to_data(request,lead_id,user_uuid)
             print("lead_data",lead_data)
             print("l_t",long_access_token)
-            ad_id="123232"
-            save_lead_info_from_response(lead_data, user_uuid,lead_id,ad_id,form_id, long_access_token)
             from_lead_to_ad = lead_to_ad_id(lead_data,long_access_token)
             print("Done",from_lead_to_ad)
             ad_id = from_lead_to_ad.ad_id
@@ -372,6 +370,9 @@ def facebook_webhook(request,user_uuid):
             user_instance = UserData.objects.filter(uuid=user_uuid).first()
             print("user_instance",user_instance)
             lead_instance = LeadgenData.objects.create(lead_id=lead_id,user_uuid=user_instance, lead_data=lead_data.get('field_data'))
+            ad_id="123232"
+            save_lead_info_from_response(lead_data, user_uuid,lead_id,ad_id,form_id, long_access_token)
+            
             print("lead_instance",lead_instance)
 
             return JsonResponse({"status": "received",
