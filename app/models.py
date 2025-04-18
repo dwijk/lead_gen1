@@ -28,7 +28,7 @@ class DataStore(models.Model):
 
 class UserLeadInfo(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user_uuid = models.ForeignKey(UserData, on_delete=models.CASCADE)
+    user_uuid = models.ForeignKey(UserData, on_delete=models.CASCADE, null=True, blank=True)
     lead_id = models.CharField(max_length=100,null=True,blank=True)
     ad_id = models.CharField(max_length=100,null=True,blank=True)
     form_name = models.CharField(max_length=100,null=True,blank=True)
@@ -74,10 +74,16 @@ class TokenDate(models.Model):
         return f"Short Token: {self.short_time_access_token[:10]}... | Long Token: {self.long_time_access_token[:10]}..."
     
 
+class ListOfKeys(models.Model):
+    key = models.CharField(max_length=255,unique=True)
+
+    def __str__(self):
+        return self.key
+    
 
 class UserFieldAccess(models.Model):
     user = models.OneToOneField(UserData, on_delete=models.CASCADE)
-    allowed_fields = models.JSONField(default=list)  # List of field names
+    allowed_fields = models.ManyToManyField(ListOfKeys, blank=True)  # List of field names
 
     # def __str__(self):
     #     return f"{self.user} Field Access"
@@ -87,6 +93,7 @@ class UserFieldAccess(models.Model):
 class Campaign(models.Model):
     # Campaign data based on the API response
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user_uuid = models.ForeignKey(UserData, on_delete=models.CASCADE, null=True, blank=True)
     campaign_id = models.CharField(max_length=50, unique=True,null=True, blank=True)
     name = models.CharField(max_length=200)
     effective_status = models.CharField(max_length=20, choices=[
@@ -124,6 +131,7 @@ class PromotedObject(models.Model):
 
 class AdSet(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user_uuid = models.ForeignKey(UserData, on_delete=models.CASCADE, null=True, blank=True)
     adset_id = models.CharField(max_length=50, unique=True,null=True, blank=True)
     name = models.CharField(max_length=255 ,null=True, blank=True)
     campaign_id = models.ForeignKey(Campaign, related_name='campaign_id_campaign', on_delete=models.CASCADE,null=True, blank=True)
@@ -145,6 +153,7 @@ class AdSet(models.Model):
 class Ad(models.Model):
     # Ad data for a specific ad set
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user_uuid = models.ForeignKey(UserData, on_delete=models.CASCADE, null=True, blank=True)
     ad_id = models.CharField(max_length=50, unique=True,null=True, blank=True)
     ad_set = models.ForeignKey(AdSet, related_name='ad_set_adset', on_delete=models.CASCADE)
     account_id = models.CharField(max_length=50,null=True, blank=True)
@@ -170,4 +179,9 @@ class LeadgenData(models.Model):
  
     user_uuid = models.ForeignKey(UserData, on_delete=models.CASCADE)
     lead_data = models.JSONField()
+    status = models.CharField(max_length=20, choices=[
+        ('ACTIVE', 'Active'),
+        ('PAUSED', 'Paused'),
+        ('DELETED', 'Deleted'),
+    ],blank=True, null=True)
     

@@ -1,23 +1,62 @@
 from django.contrib import admin
-from .models import DataStore, LeadgenData, UserData, TokenDate, UserLeadInfo,GeoLocation, Interest, UserFieldAccess,Ad,AdSet,Campaign,Targeting,PromotedObject
+from .models import DataStore, LeadgenData, UserData, TokenDate, UserLeadInfo,GeoLocation, Interest, UserFieldAccess,Ad,AdSet,Campaign,Targeting,PromotedObject, ListOfKeys
 from django import forms
 
 
 
 # Register your models here.
-admin.site.register(DataStore)
-# admin.site.register(UserData)
-admin.site.register(TokenDate)
-# admin.site.register(Campaign)
-admin.site.register(GeoLocation)
-admin.site.register(Interest)
-admin.site.register(Targeting)
-admin.site.register(PromotedObject)
-# admin.site.register(AdSet)
-# admin.site.register(Ad)
 
 
 
+@admin.register(Targeting)
+class TargetingAdmin(admin.ModelAdmin):
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        try:
+            user_data = UserData.objects.get(user=request.user)
+            return qs.filter(adset__user_uuid=user_data)
+        except UserData.DoesNotExist:
+            return qs.none()
+
+@admin.register(PromotedObject)
+class PromotedObjectAdmin(admin.ModelAdmin):
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        try:
+            user_data = UserData.objects.get(user=request.user)
+            return qs.filter(adset__user_uuid=user_data)
+        except UserData.DoesNotExist:
+            return qs.none()
+        
+
+@admin.register(GeoLocation)
+class GeoLocationAdmin(admin.ModelAdmin):
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        try:
+            user_data = UserData.objects.get(user=request.user)
+            return qs.filter(targeting__adset__user_uuid=user_data)
+        except UserData.DoesNotExist:
+            return qs.none()
+        
+
+@admin.register(Interest)
+class InterestAdmin(admin.ModelAdmin):
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        try:
+            user_data = UserData.objects.get(user=request.user)
+            return qs.filter(targeting__adset__user_uuid=user_data)
+        except UserData.DoesNotExist:
+            return qs.none()
 @admin.register(UserData)
 class UserDataAdmin(admin.ModelAdmin):
     def get_list_display(self, request):
@@ -34,11 +73,6 @@ class UserDataAdmin(admin.ModelAdmin):
                     selected_fields.append(field)
 
         return selected_fields if selected_fields else  ["uuid","app_id","app_secret_key"]  # Default if empty
-
-    # list_display = ('uuid', 'app_id', 'app_secret_key')  # Show these fields in the list view
-    # search_fields = ('uuid', 'app_id')  # Add search functionality
-    # list_filter = ('app_id',)  # Add filtering by app_id
-    # ordering = ('-uuid',)  # Default ordering
 
 
 class LeadDataAdmin(admin.ModelAdmin):
@@ -61,10 +95,6 @@ class LeadDataAdmin(admin.ModelAdmin):
     list_filter = ["id", "lead_id"]
 
 
-admin.site.register(LeadgenData, LeadDataAdmin)
-
-
-
 class UserLeadInfoAdminForm(forms.ModelForm):
     class Meta:
         model = UserLeadInfo
@@ -72,23 +102,31 @@ class UserLeadInfoAdminForm(forms.ModelForm):
 
 class UserInfoAdmin(admin.ModelAdmin):
     form = UserLeadInfoAdminForm
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        
+        # Show all data to superuser
+        if request.user.is_superuser:
+            return qs
 
+        try:
+            user_data = UserData.objects.get(user=request.user)
+            return qs.filter(user_uuid=user_data)
+        except UserData.DoesNotExist:
+            return qs.none()
     def get_fields(self, request, obj=None):
         all_fields = [f.name for f in self.model._meta.fields]
 
         try:
             user_data = UserData.objects.get(user=request.user)
             access = UserFieldAccess.objects.get(user=user_data)
-            allowed_fields = access.allowed_fields
-            return [f for f in all_fields if f in allowed_fields]
+            allowed_keys = list(access.allowed_fields.values_list('key', flat=True))
+            return [f for f in all_fields if f in allowed_keys]
         except (UserData.DoesNotExist, UserFieldAccess.DoesNotExist):
-            # return []
             return all_fields
 
     def get_list_display(self, request):
-        # Use same allowed fields for list display, minus long text fields if needed
         fields = self.get_fields(request)
-        # Optional: limit very long fields like 'full_name' to avoid clutter
         excluded = ['uuid']  # Keep only relevant ones
         return [f for f in fields if f not in excluded]
 
@@ -118,22 +156,39 @@ class UserInfoAdmin(admin.ModelAdmin):
 
         return fieldsets
 
-admin.site.register(UserLeadInfo, UserInfoAdmin)
-admin.site.register(UserFieldAccess)
-
 
 class CampaignAdmin(admin.ModelAdmin):
-    def get_fields(self, request, obj=None):
-        all_fields = [f.name for f in self.model._meta.fields if f.editable]
-        print("all_fields",all_fields)
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        print("qs",qs)
+        # Allow superusers to see all data
+        if request.user.is_superuser:
+            return qs
+
         try:
             user_data = UserData.objects.get(user=request.user)
-            print("user_data",user_data)
+            print("user_data", user_data)
+            return qs.filter(user_uuid=user_data)
+        except UserData.DoesNotExist:
+            return qs.none()
+    def get_fields(self, request, obj=None):
+        all_fields = [f.name for f in self.model._meta.fields if f.editable]
+        print("all_fields", all_fields)
+        
+        try:
+            user_data = UserData.objects.get(user=request.user)
+            print("user_data", user_data)
+            
             access = UserFieldAccess.objects.get(user=user_data)
-            print("access",access)
-            allowed_fields = access.allowed_fields
-            print("allowed_fields",allowed_fields)
+            print("access", access)
+
+            # Properly extract the actual keys from the ManyToMany relationship
+            allowed_fields_qs = access.allowed_fields.all()
+            allowed_fields = [field.key for field in allowed_fields_qs]
+            print("allowed_fields", allowed_fields)
+
             return [f for f in all_fields if f in allowed_fields]
+        
         except (UserData.DoesNotExist, UserFieldAccess.DoesNotExist):
             return all_fields
 
@@ -169,42 +224,59 @@ class CampaignAdmin(admin.ModelAdmin):
         return fieldsets
 
 
-admin.site.register(Campaign, CampaignAdmin)
-
-
-
 class AdSetAdmin(admin.ModelAdmin):
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        # Superuser should see everything
+        if request.user.is_superuser:
+            return qs
+
+        try:
+            # Get the UserData UUID linked to the logged-in user
+            user_data = UserData.objects.get(user=request.user)
+            return qs.filter(user_uuid=user_data)
+        except UserData.DoesNotExist:
+            return qs.none()
+        
     def get_fields(self, request, obj=None):
-        # Exclude non-editable fields like uuid
+    # Exclude non-editable fields like uuid
         all_fields = [f.name for f in self.model._meta.fields if f.editable]
-        print("all_fields",all_fields)
+        print("all_fields", all_fields)
+
         try:
             user_data = UserData.objects.get(user=request.user)
-            print("user_data",user_data)
+            print("user_data", user_data)
             access = UserFieldAccess.objects.get(user=user_data)
-            print("access",access)
-            allowed_fields = access.allowed_fields
-            print("allowed_fields",allowed_fields)
+            print("access", access)
+
+            # Convert the ManyRelatedManager to a list of keys
+            allowed_fields = list(access.allowed_fields.values_list('key', flat=True))
+            print("allowed_fields", allowed_fields)
+
             return [f for f in all_fields if f in allowed_fields]
+
         except (UserData.DoesNotExist, UserFieldAccess.DoesNotExist):
             return all_fields
-
     def get_list_display(self, request):
-        # Optional: include uuid in list_display even if not editable
         all_fields = [f.name for f in self.model._meta.fields]
-        print("all_fields2",all_fields)
 
         try:
             user_data = UserData.objects.get(user=request.user)
-            print("user_data2",user_data)
             access = UserFieldAccess.objects.get(user=user_data)
-            print("access2",access)
-            allowed_fields = access.allowed_fields
-            print("allowed_fields2",allowed_fields)
-            return [f for f in all_fields if f in allowed_fields]
-        except (UserData.DoesNotExist, UserFieldAccess.DoesNotExist):
-            return all_fields
+            
+            allowed_field_objs = access.allowed_fields.all()
+            allowed_fields = [field.key for field in allowed_field_objs]
 
+            # Ensure a valid identifier (e.g., uuid) is always shown
+            default_field = 'uuid' if 'uuid' in all_fields else all_fields[0] if all_fields else None
+
+            return [f for f in all_fields if f in allowed_fields] or [default_field]
+        
+        except (UserData.DoesNotExist, UserFieldAccess.DoesNotExist):
+            default_field = 'uuid' if 'uuid' in all_fields else all_fields[0] if all_fields else None
+            return [default_field]
+        
     def get_fieldsets(self, request, obj=None):
         fields = self.get_fields(request, obj)
         print("fields3",fields)
@@ -235,11 +307,21 @@ class AdSetAdmin(admin.ModelAdmin):
         return fieldsets
 
 
-admin.site.register(AdSet, AdSetAdmin)
 
 
 
 class AdAdmin(admin.ModelAdmin):
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        try:
+            user_data = UserData.objects.get(user=request.user)
+            return qs.filter(user_uuid=user_data)
+        except UserData.DoesNotExist:
+            return qs.none()
+        
+
     def get_fields(self, request, obj=None):
         # Exclude non-editable fields like uuid
         all_fields = [f.name for f in self.model._meta.fields if f.editable]
@@ -249,7 +331,7 @@ class AdAdmin(admin.ModelAdmin):
             print("user_data5",user_data)
             access = UserFieldAccess.objects.get(user=user_data)
             print("access5",access)
-            allowed_fields = access.allowed_fields
+            allowed_fields = list(access.allowed_fields.values_list('key', flat=True))
             print("allowed_fields5",allowed_fields)
             return [f for f in all_fields if f in allowed_fields]
         except (UserData.DoesNotExist, UserFieldAccess.DoesNotExist):
@@ -257,18 +339,25 @@ class AdAdmin(admin.ModelAdmin):
 
     def get_list_display(self, request):
         all_fields = [f.name for f in self.model._meta.fields]
-        print("all_fields4",all_fields)
+        print("all_fields4", all_fields)
+        
         try:
             user_data = UserData.objects.get(user=request.user)
-            print("user_data4",user_data)
+            print("user_data4", user_data)
+
             access = UserFieldAccess.objects.get(user=user_data)
-            print("access4",access)
-            allowed_fields = access.allowed_fields
-            print("allowed_fields4",allowed_fields)
+            print("access4", access)
+
+            # Get actual list of keys from related ListOfKeys objects
+            allowed_fields_qs = access.allowed_fields.all()
+            allowed_fields = [field.key for field in allowed_fields_qs]
+            print("allowed_fields4", allowed_fields)
+
             return [f for f in all_fields if f in allowed_fields]
+        
         except (UserData.DoesNotExist, UserFieldAccess.DoesNotExist):
             return all_fields
-
+        
     def get_fieldsets(self, request, obj=None):
         fields = self.get_fields(request, obj)
         print("fields4",fields)
@@ -295,5 +384,14 @@ class AdAdmin(admin.ModelAdmin):
         return fieldsets
 
 
-admin.site.register(Ad, AdAdmin)
 
+
+admin.site.register(DataStore)
+admin.site.register(TokenDate)
+admin.site.register(Ad, AdAdmin)
+admin.site.register(ListOfKeys)
+admin.site.register(AdSet, AdSetAdmin)
+admin.site.register(Campaign, CampaignAdmin)
+admin.site.register(UserLeadInfo, UserInfoAdmin)
+admin.site.register(UserFieldAccess)
+admin.site.register(LeadgenData, LeadDataAdmin)
