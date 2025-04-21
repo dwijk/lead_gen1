@@ -95,12 +95,12 @@ def adset_to_campaign(adset_id, long_access_token, user_instance):
     # response = requests.get(url)
     # response_json = response.json()
     response_json = {
-  "campaign_id": "44122334455667788",
-  "id": "441234567890123456"
-}
+    "campaign_id": "44122334455667788",
+    "id": "441234567890123456"
+    }
 
     campaign_id = response_json.get('campaign_id')
-    print("campaign_id",campaign_id)
+    # print("campaign_id",campaign_id)
     campaign = Campaign.objects.filter(campaign_id=campaign_id).first()
     if not campaign:
         # campaign URL
@@ -147,7 +147,7 @@ def adid_to_adset(ad_id, long_access_token, user_instance):
         "id": "44987654321098765"
         }       
     adset_id = response_json.get('adset_id')
-    print("adset_id",adset_id)
+    # print("adset_id",adset_id)
     # check_adset_id = AdSet.objects.filter(ad_set_id=adset_id).first()
     check_adset_id = AdSet.objects.select_related(
         'targeting', 'promoted_object', 'campaign_id'
@@ -229,7 +229,7 @@ def adid_to_adset(ad_id, long_access_token, user_instance):
             targeting.interests.set(interest_objs)
         else:
             targeting = None
-        print("data",data,"targeting",targeting)
+        # print("data",data,"targeting",targeting)
         # Promoted Object
         if "promoted_object" in data:
             promoted = PromotedObject.objects.create(
@@ -279,9 +279,9 @@ def lead_to_ad_id(lead_Data,long_access_token,user_instance):
     check_ad_id = Ad.objects.filter(ad_id=ad_id).first()
     # print("check_ad_id",check_ad_id)
     if not check_ad_id:
-        print("check_ad_id not found", ad_id, long_access_token)
+        # print("check_ad_id not found", ad_id, long_access_token)
         ad_set_data = adid_to_adset(ad_id, long_access_token,user_instance)
-        print("ad_set_data2",ad_set_data, "type",type(ad_set_data))
+        # print("ad_set_data2",ad_set_data)
         url = f"https://graph.facebook.com/v19.0/{ad_id}?fields=id,name,adset_id,campaign_id,account_id,configured_status,effective_status,status,destination_set_id,conversion_domain&access_token={long_access_token}"
         # response = requests.get(url)
         # data = response.json()
