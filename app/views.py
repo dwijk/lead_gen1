@@ -239,7 +239,7 @@ def adid_to_adset(ad_id, long_access_token, user_instance):
             print("targeting",targeting)
         else:
             targeting = None
-
+        print("data",data)
         # Promoted Object
         if "promoted_object" in data:
             promoted = PromotedObject.objects.create(
