@@ -85,7 +85,7 @@ def save_lead_info_from_response(response, user_uuid,lead_id,ad_id, form_id, lon
     cleaned_data["ad_id"] = ad_id
     form_name = formid_to_name(form_id,long_access_token)
     cleaned_data["form_name"] = form_name
-    print("cleaned_data",cleaned_data)
+    print("cleaned_data2",cleaned_data)
     # Save the object
     lead = UserLeadInfo.objects.create(**cleaned_data)
     return True
@@ -102,36 +102,37 @@ def adset_to_campaign(adset_id, long_access_token, user_instance):
 
     campaign_id = response_json.get('campaign_id')
     campaign = Campaign.objects.filter(campaign_id=campaign_id).first()
-    if not campaign:
-        # campaign URL
-        print("in if campaign_data")
-        campaign_url = f"https://graph.facebook.com/v22.0/{campaign_id}?fields=id,name,status,budget_remaining,objective,start_time,stop_time,daily_budget,lifetime_budget&access_token={long_access_token}"
-        # campaign_response = requests.get(campaign_url)
-        # campaign_data = campaign_response.json()
-        campaign_data = {
-            "id": "44122334455667788",
-            "name": "My Campaign",
-            "status": "ACTIVE",
-            "budget_remaining": "1000000",
-            "objective": "LEAD_GENERATION",
-            "start_time": "2025-04-01T00:00:00+0000",
-            "stop_time": "2025-04-30T23:59:59+0000",
-            "daily_budget": "50000",
-            "lifetime_budget": "1500000"
-            }
+    if campaign:
+        return campaign
+    # campaign URL
+    print("in if campaign_data")
+    campaign_url = f"https://graph.facebook.com/v22.0/{campaign_id}?fields=id,name,status,budget_remaining,objective,start_time,stop_time,daily_budget,lifetime_budget&access_token={long_access_token}"
+    # campaign_response = requests.get(campaign_url)
+    # campaign_data = campaign_response.json()
+    campaign_data = {
+        "id": "44122334455667788",
+        "name": "My Campaign",
+        "status": "ACTIVE",
+        "budget_remaining": "1000000",
+        "objective": "LEAD_GENERATION",
+        "start_time": "2025-04-01T00:00:00+0000",
+        "stop_time": "2025-04-30T23:59:59+0000",
+        "daily_budget": "50000",
+        "lifetime_budget": "1500000"
+        }
 
-        # Extract data with safe defaults
-        campaign = Campaign.objects.create(
-        user_uuid=user_instance,
-        campaign_id=campaign_id,
-        name=campaign_data.get("name"),
-        effective_status=campaign_data.get("status"),
-        budget_remaining=campaign_data.get("budget_remaining", 0),
-        objective=campaign_data.get("objective"),
-        start_time=parse_datetime(campaign_data.get("start_time")),
-        end_time=parse_datetime(campaign_data.get("stop_time")),
-        daily_budget=campaign_data.get("daily_budget", 0),
-        lifetime_budget=campaign_data.get("lifetime_budget", 0)
+    # Extract data with safe defaults
+    campaign = Campaign.objects.create(
+    user_uuid=user_instance,
+    campaign_id=campaign_id,
+    name=campaign_data.get("name"),
+    effective_status=campaign_data.get("status"),
+    budget_remaining=campaign_data.get("budget_remaining", 0),
+    objective=campaign_data.get("objective"),
+    start_time=parse_datetime(campaign_data.get("start_time")),
+    end_time=parse_datetime(campaign_data.get("stop_time")),
+    daily_budget=campaign_data.get("daily_budget", 0),
+    lifetime_budget=campaign_data.get("lifetime_budget", 0)
     )
     print("campaign",campaign)
     return campaign
@@ -258,32 +259,33 @@ def lead_to_ad_id(lead_Data,long_access_token,user_instance):
     if not ad_id:
         ad_id = None
     check_ad_id = Ad.objects.filter(ad_id=ad_id).first()
-    if not check_ad_id:
-        ad_set_data = adid_to_adset(ad_id, long_access_token,user_instance)
-        url = f"https://graph.facebook.com/v19.0/{ad_id}?fields=id,name,adset_id,campaign_id,account_id,configured_status,effective_status,status,destination_set_id,conversion_domain&access_token={long_access_token}"
-        # response = requests.get(url)
-        # data = response.json()
-        data = {
-            "id": "222222222222",
-            "name": "New ad",
-            "adset_id": "1245678901",
-            "campaign_id": "44122334455667788",
-            "account_id": "act_124567890123",
-            "status": "PAUSED",
-            "destination_set_id": "ds_445678901234",
-            "conversion_domain": "yourdomain.com"
-            }
-        # Create the Ad record
-        check_ad_id, _ = Ad.objects.update_or_create(
-        ad_id=data["id"],
-        defaults={
-            "user_uuid": user_instance,
-            "ad_set": ad_set_data,
-            "account_id": data["account_id"],
-            "name": data["name"],
-            "status": data["status"],
-            "destination_set_id": data["destination_set_id"],
-            "conversion_domain": data["conversion_domain"]
+    if check_ad_id:
+        return check_ad_id
+    ad_set_data = adid_to_adset(ad_id, long_access_token,user_instance)
+    url = f"https://graph.facebook.com/v19.0/{ad_id}?fields=id,name,adset_id,campaign_id,account_id,configured_status,effective_status,status,destination_set_id,conversion_domain&access_token={long_access_token}"
+    # response = requests.get(url)
+    # data = response.json()
+    data = {
+        "id": "222222222222",
+        "name": "New ad",
+        "adset_id": "1245678901",
+        "campaign_id": "44122334455667788",
+        "account_id": "act_124567890123",
+        "status": "PAUSED",
+        "destination_set_id": "ds_445678901234",
+        "conversion_domain": "yourdomain.com"
+        }
+    # Create the Ad record
+    check_ad_id, _ = Ad.objects.update_or_create(
+    ad_id=data["id"],
+    defaults={
+        "user_uuid": user_instance,
+        "ad_set": ad_set_data,
+        "account_id": data["account_id"],
+        "name": data["name"],
+        "status": data["status"],
+        "destination_set_id": data["destination_set_id"],
+        "conversion_domain": data["conversion_domain"]
         }
     )
 
@@ -329,8 +331,9 @@ def facebook_webhook(request,user_uuid):
             #                      'object': 'page'}
             print("payload",payload)
             data_instance = DataStore.objects.create(name="Lead Data", data=payload)
-            lead_id = payload.get('entry')[0].get('changes')[0].get('value').get('leadgen_id')
-            form_id = payload.get('entry')[0].get('changes')[0].get('value').get('form_id')
+            from_lead_data = payload.get('entry')[0].get('changes')[0].get('value')
+            lead_id = from_lead_data.get('leadgen_id')
+            form_id = from_lead_data.get('form_id')
             print("lead_id",lead_id)
             lead_data, long_access_token = lead_to_data(request,lead_id,user_uuid)
             print("l_t",long_access_token)
