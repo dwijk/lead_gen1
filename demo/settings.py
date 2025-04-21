@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "app",
     "django_cron",
+    "background_task",
 ]
 
 MIDDLEWARE = [

@@ -121,33 +121,24 @@ def adset_to_campaign(adset_id, long_access_token, user_instance):
             }
 
         # Extract data with safe defaults
-        name = campaign_data.get('name')
-        status = campaign_data.get('status')
-        budget_remaining = campaign_data.get('budget_remaining') or 0
-        objective = campaign_data.get('objective')
-        start_time = campaign_data.get('start_time')
-        stop_time = campaign_data.get('stop_time')
-        daily_budget = campaign_data.get('daily_budget') or 0
-        lifetime_budget = campaign_data.get('lifetime_budget') or 0
-
-        # Step 4: Create and save campaign
         campaign = Campaign.objects.create(
-            user_uuid=user_instance,
-            campaign_id=campaign_id,
-            name=name,
-            effective_status=status,
-            budget_remaining=budget_remaining,
-            objective=objective,
-            start_time=start_time,
-            end_time=stop_time,
-            daily_budget=daily_budget,
-            lifetime_budget=lifetime_budget
-        )
+        user_uuid=user_instance,
+        campaign_id=campaign_id,
+        name=campaign_data.get("name"),
+        effective_status=campaign_data.get("status"),
+        budget_remaining=campaign_data.get("budget_remaining", 0),
+        objective=campaign_data.get("objective"),
+        start_time=parse_datetime(campaign_data.get("start_time")),
+        end_time=parse_datetime(campaign_data.get("stop_time")),
+        daily_budget=campaign_data.get("daily_budget", 0),
+        lifetime_budget=campaign_data.get("lifetime_budget", 0)
+    )
         print("campaign",campaign)
     return campaign
     
 def adid_to_adset(ad_id, long_access_token, user_instance):
-    print("ad_id",ad_id, "long_access_token",long_access_token)
+    print("adid_to_adset")
+    # print("ad_id",ad_id, "long_access_token",long_access_token)
     url = f"https://graph.facebook.com/v22.0/{ad_id}?fields=adset_id&access_token={long_access_token}"
     # response = requests.get(url)
     # response_json = response.json()
@@ -168,7 +159,7 @@ def adid_to_adset(ad_id, long_access_token, user_instance):
     if not check_adset_id:
         print("check_adset_id not found")
         campaign_data = adset_to_campaign(adset_id, long_access_token, user_instance)
-        print("campaign",campaign_data)
+        # print("campaign",campaign_data)
         # ADSET URL
         url = f"https://graph.facebook.com/v19.0/{adset_id}?fields=id,name,campaign_id,account_id,status,daily_budget,lifetime_budget,budget_remaining,bid_amount,bid_strategy,billing_event,optimization_goal,start_time,end_time,destination_type,targeting{{age_min,age_max,genders,geo_locations{{countries}},interests{{id,name}}}},promoted_object{{page_id,custom_event_type}}&access_token={long_access_token}"
         # response = requests.get(url)
@@ -223,12 +214,12 @@ def adid_to_adset(ad_id, long_access_token, user_instance):
             for country in targeting_data.get("geo_locations", {}).get("countries", []):
                 geo, _ = GeoLocation.objects.get_or_create(country=country)
                 geo_objs.append(geo)
-            print("geo_objs",geo_objs)
+            # print("geo_objs",geo_objs)
             # Save interests
             for interest in targeting_data.get("interests", []):
                 i, _ = Interest.objects.get_or_create(fb_id=interest["id"], name=interest["name"])
                 interest_objs.append(i)
-            print("interest_objs",interest_objs)
+            # print("interest_objs",interest_objs)
             targeting = Targeting.objects.create(
                 age_min=targeting_data.get("age_min", 0),
                 age_max=targeting_data.get("age_max", 0),
@@ -236,24 +227,23 @@ def adid_to_adset(ad_id, long_access_token, user_instance):
             )
             targeting.geo_locations.set(geo_objs)
             targeting.interests.set(interest_objs)
-            print("targeting",targeting)
         else:
             targeting = None
-        print("data",data)
+        print("data",data,"targeting",targeting)
         # Promoted Object
         if "promoted_object" in data:
             promoted = PromotedObject.objects.create(
                 page_id=data["promoted_object"].get("page_id"),
                 custom_event_type=data["promoted_object"].get("custom_event_type")
             )
-            print("promoted",promoted)
+            # print("promoted",promoted)
         else:
             promoted = None
-            print("promoted",promoted)
+        print("promoted",promoted)
         # Create AdSet
-        print("campaign_data",data["campaign_id"])
+        # print("campaign_data",data["campaign_id"])
         campaign_instance = Campaign.objects.get(campaign_id=data["campaign_id"])
-        print("campaign_instance",campaign_instance)
+        # print("campaign_instance",campaign_instance)
         check_adset_id, created = AdSet.objects.update_or_create(
             adset_id=data.get("id"),
             defaults={
@@ -281,11 +271,13 @@ def adid_to_adset(ad_id, long_access_token, user_instance):
     return check_adset_id
 
 def lead_to_ad_id(lead_Data,long_access_token,user_instance):
-    print("lead_Data",lead_Data)
+    # print("lead_Data",lead_Data)
     ad_id = lead_Data.get('ad_id')
-    print("ad_id",ad_id)
+    if not ad_id:
+        ad_id = None
+    # print("ad_id",ad_id)
     check_ad_id = Ad.objects.filter(ad_id=ad_id).first()
-    print("check_ad_id",check_ad_id)
+    # print("check_ad_id",check_ad_id)
     if not check_ad_id:
         print("check_ad_id not found", ad_id, long_access_token)
         ad_set_data = adid_to_adset(ad_id, long_access_token,user_instance)
@@ -304,20 +296,20 @@ def lead_to_ad_id(lead_Data,long_access_token,user_instance):
             "conversion_domain": "yourdomain.com"
             }
         # Create the Ad record
-        check_ad_id, created = Ad.objects.update_or_create(
-        ad_id=data.get("id"),
+        check_ad_id, _ = Ad.objects.update_or_create(
+        ad_id=data["id"],
         defaults={
-            'user_uuid': user_instance,
-            'ad_set': ad_set_data,
-            'account_id': data.get("account_id"),
-            'name': data.get("name"),
-            'status': data.get("status"),
-            'destination_set_id': data.get("destination_set_id"),
-            'conversion_domain': data.get("conversion_domain")
+            "user_uuid": user_instance,
+            "ad_set": ad_set_data,
+            "account_id": data["account_id"],
+            "name": data["name"],
+            "status": data["status"],
+            "destination_set_id": data["destination_set_id"],
+            "conversion_domain": data["conversion_domain"]
         }
-    )   
+    )
 
-        print("check_ad_id in if",check_ad_id, "| created:", created)
+        print("check_ad_id in if",check_ad_id,)
     return check_ad_id
 
 # VERIFY_TOKEN = os.getenv("FB_VERIFY_TOKEN", "your_custom_verify_token")
