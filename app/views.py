@@ -369,8 +369,18 @@ def facebook_webhook(request,user_uuid):
             # user_instance = get_object_or_404(UserData, uuid=user_uuid)
             user_instance = UserData.objects.filter(uuid=user_uuid).first()
             print("user_instance",user_instance)
-            lead_instance = LeadgenData.objects.create(lead_id=lead_id,user_uuid=user_instance, lead_data=lead_data.get('field_data'), status='ACTIVE')
-            
+            # lead_instance = LeadgenData.objects.create(lead_id=lead_id,user_uuid=user_instance, lead_data=lead_data.get('field_data'), status='ACTIVE')
+            if lead_data.get('field_data'):
+                lead_instance, created = LeadgenData.objects.update_or_create(
+                lead_id=lead_id,
+                defaults={
+                    'user_uuid': user_instance,
+                    'lead_data': lead_data.get('field_data'),
+                    'status': 'ACTIVE'
+                }
+            )       
+            else:
+                lead_instance = None
             print("lead_instance",lead_instance) 
             from_lead_to_ad = lead_to_ad_id(lead_data,long_access_token,user_instance)
             print("Done",from_lead_to_ad)
