@@ -75,6 +75,9 @@ def save_lead_info_from_response(response, user_uuid,lead_id,ad_id, form_id, lon
     print("valid_fields",valid_fields)
     cleaned_data = {k: v for k, v in data.items() if k in valid_fields}
     print("cleaned_data",cleaned_data)
+    if not cleaned_data:
+        print("False")
+        return False
     # Add required foreign key
     cleaned_data["user_uuid"] = user_uuid
     user_instance = UserData.objects.get(uuid=user_uuid)
@@ -160,13 +163,14 @@ def adid_to_adset(ad_id, long_access_token, user_instance):
         Prefetch('targeting__geo_locations'),
         Prefetch('targeting__interests')
     ).filter(adset_id=adset_id).first()
+    print("adset",adset)
     if adset:
         print("in if adset")
         return adset
 
     # Step 3: If not found, fetch and create AdSet
     campaign = adset_to_campaign(adset_id, long_access_token, user_instance)
-
+    print("campiagn",campaign)
     data = {
         "id": "1245678901",
         "name": "Ad Set 1",
@@ -227,13 +231,13 @@ def adid_to_adset(ad_id, long_access_token, user_instance):
     ) if promoted_data else None
 
     # Step 6: Create or update AdSet
-    campaign_instance = Campaign.objects.get(campaign_id=data["campaign_id"])
+    # campaign_instance = Campaign.objects.get(campaign_id=data["campaign_id"])
     adset, _ = AdSet.objects.update_or_create(
         adset_id=data["id"],
         defaults={
             "user_uuid": user_instance,
             "name": data.get("name"),
-            "campaign_id": campaign_instance,
+            "campaign_id": campaign,
             "account_id": data.get("account_id"),
             "status": data.get("status"),
             "daily_budget": data.get("daily_budget"),
@@ -260,6 +264,7 @@ def lead_to_ad_id(lead_Data,long_access_token,user_instance):
         ad_id = None
     check_ad_id = Ad.objects.filter(ad_id=ad_id).first()
     if check_ad_id:
+        print("in if end lead_to_ad_id")
         return check_ad_id
     ad_set_data = adid_to_adset(ad_id, long_access_token,user_instance)
     url = f"https://graph.facebook.com/v19.0/{ad_id}?fields=id,name,adset_id,campaign_id,account_id,configured_status,effective_status,status,destination_set_id,conversion_domain&access_token={long_access_token}"
@@ -336,7 +341,7 @@ def facebook_webhook(request,user_uuid):
             form_id = from_lead_data.get('form_id')
             print("lead_id",lead_id)
             lead_data, long_access_token = lead_to_data(request,lead_id,user_uuid)
-            print("l_t",long_access_token)
+            print("lead_data",lead_data,"l_t",long_access_token)
             
             
             # user_instance = get_object_or_404(UserData, uuid=user_uuid)
