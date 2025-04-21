@@ -146,10 +146,11 @@ def adid_to_adset(ad_id, long_access_token, user_instance):
     # response = requests.get(url)
     # response_json = response.json()
     response_json = {
-        "adset_id": "442345678901",
+        "adset_id": "1245678901",
         "id": "44987654321098765"
         }       
     adset_id = response_json.get('adset_id')
+
     # check_adset_id = AdSet.objects.filter(ad_set_id=adset_id).first()
     # adset = AdSet.objects.select_related(
     #     'targeting', 'promoted_object', 'campaign_id'
@@ -263,6 +264,7 @@ def lead_to_ad_id(lead_Data,long_access_token,user_instance):
     if not ad_id:
         ad_id = None
     check_ad_id = Ad.objects.filter(ad_id=ad_id).first()
+    print("check_ad_id",check_ad_id, ad_id)
     if check_ad_id:
         print("in if end lead_to_ad_id")
         return check_ad_id
