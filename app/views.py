@@ -304,18 +304,20 @@ def lead_to_ad_id(lead_Data,long_access_token,user_instance):
             "conversion_domain": "yourdomain.com"
             }
         # Create the Ad record
-        check_ad_id = Ad.objects.create(
-            user_uuid=user_instance,
-            ad_set=ad_set_data,
-            ad_id=data.get("id"),
-            account_id=data.get("account_id"),
-            name=data.get("name"),
-            status=data.get("status"),
-            destination_set_id=data.get("destination_set_id"),
-            conversion_domain=data.get("conversion_domain")
-        )
+        check_ad_id, created = Ad.objects.update_or_create(
+        ad_id=data.get("id"),
+        defaults={
+            'user_uuid': user_instance,
+            'ad_set': ad_set_data,
+            'account_id': data.get("account_id"),
+            'name': data.get("name"),
+            'status': data.get("status"),
+            'destination_set_id': data.get("destination_set_id"),
+            'conversion_domain': data.get("conversion_domain")
+        }
+    )   
 
-        print("check_ad_id in if",check_ad_id)
+        print("check_ad_id in if",check_ad_id, "| created:", created)
     return check_ad_id
 
 # VERIFY_TOKEN = os.getenv("FB_VERIFY_TOKEN", "your_custom_verify_token")
