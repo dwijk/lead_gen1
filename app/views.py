@@ -549,3 +549,34 @@ def fetch_data(request, user_uuid):
 
 def generate_token_60_days():
     pass
+
+
+
+
+
+
+
+
+@csrf_exempt
+def google_ads_webhook(request):
+    print("google ads webhook")
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            print("google ads webhook",data)
+            # Simulated verification token response
+            # if "leadGenWebhookToken" in data:
+            #     return HttpResponse(data["leadGenWebhookToken"])
+
+            # # Extract lead info
+            # lead = data.get("lead", {})
+            # lead_id = lead.get("leadId")
+            # campaign_id = lead.get("campaignId")
+
+            # print("✅ Lead received:", lead_id, campaign_id)
+
+            return JsonResponse({"status": "success"}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+    return JsonResponse({"error": "Invalid method"}, status=405)
