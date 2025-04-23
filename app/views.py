@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -556,6 +556,8 @@ def generate_token_60_days():
 
 
 
+GOOGLE_ADS_WEBHOOK_KEY = "mySuperSecretKey123"
+
 
 @csrf_exempt
 def google_ads_webhook(request):
@@ -576,6 +578,27 @@ def google_ads_webhook(request):
             # campaign_id = lead.get("campaignId")
 
             # print("✅ Lead received:", lead_id, campaign_id)
+            received_key = data.get("google_key")  # Use the correct key field name
+            print("Received key:", received_key)
+
+            if received_key != GOOGLE_ADS_WEBHOOK_KEY:
+                return HttpResponseForbidden("Invalid webhook key")
+            
+            for item in data.get("user_column_data", []):
+                # LeadAnswer.objects.create(
+                #     lead=lead,
+                #     column_id=item.get("column_id", ""),
+                #     column_name=item.get("column_name", ""),
+                #     string_value=item.get("string_value", ""),
+                # )
+                column_id=item.get("column_id", ""),
+                column_name=item.get("column_name", ""),
+                string_value=item.get("string_value", "")
+                print("data",column_id,column_name,string_value)
+            # You can now process and store the lead data
+            print("Lead data:", data)
+
+            # return JsonResponse({"status": "success"})
 
             return JsonResponse({"status": "success"}, status=200)
 
