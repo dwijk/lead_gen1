@@ -185,3 +185,31 @@ class LeadgenData(models.Model):
         ('DELETED', 'Deleted'),
     ],blank=True, null=True)
     
+
+
+
+class GoogleLead(models.Model):
+    lead_id = models.CharField(max_length=255)
+    api_version = models.CharField(max_length=10, null=True, blank=True)
+    form_id = models.IntegerField()
+    campaign_id = models.BigIntegerField()
+    adgroup_id = models.BigIntegerField(null=True, blank=True)
+    creative_id = models.BigIntegerField(null=True, blank=True)
+    gcl_id = models.CharField(max_length=255, null=True, blank=True)
+    is_test = models.BooleanField(default=False)
+    google_key = models.CharField(max_length=100)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Lead {self.lead_id}"
+    
+
+class GoogleLeadAnswer(models.Model):
+    lead = models.ForeignKey(GoogleLead, on_delete=models.CASCADE, related_name="answers")
+    column_id = models.CharField(max_length=100)
+    column_name = models.CharField(max_length=255, null=True, blank=True)
+    string_value = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.column_id}: {self.string_value}"

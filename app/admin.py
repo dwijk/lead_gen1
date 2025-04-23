@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import DataStore, LeadgenData, UserData, TokenDate, UserLeadInfo,GeoLocation, Interest, UserFieldAccess,Ad,AdSet,Campaign,Targeting,PromotedObject, ListOfKeys
+from .models import DataStore, LeadgenData, UserData, TokenDate, UserLeadInfo,GeoLocation, Interest, UserFieldAccess,Ad,AdSet,Campaign,Targeting,PromotedObject, ListOfKeys, GoogleLeadAnswer, GoogleLead
 from django import forms
 
 
@@ -395,3 +395,5 @@ admin.site.register(Campaign, CampaignAdmin)
 admin.site.register(UserLeadInfo, UserInfoAdmin)
 admin.site.register(UserFieldAccess)
 admin.site.register(LeadgenData, LeadDataAdmin)
+admin.site.register(GoogleLead)
+admin.site.register(GoogleLeadAnswer)

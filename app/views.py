@@ -13,7 +13,7 @@ from django.utils.timezone import now
 import requests
 from urllib.parse import urlencode
 from django.shortcuts import redirect
-from .models import DataStore, LeadgenData, TokenDate,UserData, UserLeadInfo, AdSet, Ad, Campaign, GeoLocation,Interest,Targeting,PromotedObject
+from .models import GoogleLead,GoogleLeadAnswer,DataStore, LeadgenData, TokenDate,UserData, UserLeadInfo, AdSet, Ad, Campaign, GeoLocation,Interest,Targeting,PromotedObject
 import urllib.parse
 from django.utils.dateparse import parse_datetime
 from django.db.models import Prefetch
@@ -584,17 +584,29 @@ def google_ads_webhook(request):
             if received_key != GOOGLE_ADS_WEBHOOK_KEY:
                 return HttpResponseForbidden("Invalid webhook key")
             
+            lead = GoogleLead.objects.create(
+                lead_id=data["lead_id"],
+                api_version=data.get("api_version"),
+                form_id=data.get("form_id"),
+                campaign_id=data.get("campaign_id"),
+                adgroup_id=data.get("adgroup_id"),
+                creative_id=data.get("creative_id"),
+                gcl_id=data.get("gcl_id"),
+                is_test=data.get("is_test", False),
+                google_key=received_key,
+            )
+            print("lead",lead)
             for item in data.get("user_column_data", []):
-                # LeadAnswer.objects.create(
-                #     lead=lead,
-                #     column_id=item.get("column_id", ""),
-                #     column_name=item.get("column_name", ""),
-                #     string_value=item.get("string_value", ""),
-                # )
-                column_id=item.get("column_id", ""),
-                column_name=item.get("column_name", ""),
-                string_value=item.get("string_value", "")
-                print("data",column_id,column_name,string_value)
+                GoogleLeadAnswer.objects.create(
+                    lead=lead,
+                    column_id=item.get("column_id", ""),
+                    column_name=item.get("column_name", ""),
+                    string_value=item.get("string_value", ""),
+                )
+                # column_id=item.get("column_id", ""),
+                # column_name=item.get("column_name", ""),
+                # string_value=item.get("string_value", "")
+                print("data",item)
             # You can now process and store the lead data
             print("Lead data:", data)
 
