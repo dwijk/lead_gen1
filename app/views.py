@@ -565,6 +565,7 @@ def google_ads_webhook(request):
         try:
             data = json.loads(request.body)
             print("google ads webhook",data)
+            print("key",request.headers.get("X-Goog-Signature"))
             # Simulated verification token response
             # if "leadGenWebhookToken" in data:
             #     return HttpResponse(data["leadGenWebhookToken"])
