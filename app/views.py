@@ -560,6 +560,7 @@ def generate_token_60_days():
 @csrf_exempt
 def google_ads_webhook(request):
     print("google ads webhook")
+    print("request",request.method)
     if request.method == "POST":
         try:
             data = json.loads(request.body)
