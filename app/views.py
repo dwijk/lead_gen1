@@ -550,15 +550,6 @@ def fetch_data(request, user_uuid):
 def generate_token_60_days():
     pass
 
-
-
-
-
-
-
-GOOGLE_ADS_WEBHOOK_KEY = "mySuperSecretKey123"
-
-
 @csrf_exempt
 def google_ads_webhook(request):
     print("google ads webhook")
@@ -568,20 +559,10 @@ def google_ads_webhook(request):
             data = json.loads(request.body)
             print("google ads webhook",data)
             print("key",request.headers.get("X-Goog-Signature"))
-            # Simulated verification token response
-            # if "leadGenWebhookToken" in data:
-            #     return HttpResponse(data["leadGenWebhookToken"])
-
-            # # Extract lead info
-            # lead = data.get("lead", {})
-            # lead_id = lead.get("leadId")
-            # campaign_id = lead.get("campaignId")
-
-            # print("✅ Lead received:", lead_id, campaign_id)
             received_key = data.get("google_key")  # Use the correct key field name
             print("Received key:", received_key)
 
-            if received_key != GOOGLE_ADS_WEBHOOK_KEY:
+            if received_key != "mySuperSecretKey123":
                 return HttpResponseForbidden("Invalid webhook key")
             
             lead = GoogleLead.objects.create(
@@ -603,11 +584,7 @@ def google_ads_webhook(request):
                     column_name=item.get("column_name", ""),
                     string_value=item.get("string_value", ""),
                 )
-                # column_id=item.get("column_id", ""),
-                # column_name=item.get("column_name", ""),
-                # string_value=item.get("string_value", "")
                 print("data",item)
-            # You can now process and store the lead data
             print("Lead data:", data)
 
             # return JsonResponse({"status": "success"})
