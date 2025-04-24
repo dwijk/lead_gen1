@@ -563,7 +563,9 @@ def google_ads_webhook(request, user_uuid):
 
             if received_key != "mySuperSecretKey123":
                 return HttpResponseForbidden("Invalid webhook key")
+            print("user_uuid",user_uuid)
             user_instance = UserData.objects.get(uuid=user_uuid)
+            print("user_instance",user_instance)
             lead = GoogleLead.objects.create(
                 user_uuid=user_instance,
                 lead_id=data["lead_id"],
