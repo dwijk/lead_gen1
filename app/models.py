@@ -190,7 +190,7 @@ class LeadgenData(models.Model):
 
 class GoogleLead(models.Model):
     user_uuid = models.ForeignKey(UserData, on_delete=models.CASCADE, null=True, blank=True)
-    lead_id = models.CharField(max_length=255)
+    lead_id = models.CharField(max_length=255, unique=True)
     api_version = models.CharField(max_length=10, null=True, blank=True)
     form_id = models.IntegerField()
     campaign_id = models.BigIntegerField()
@@ -203,7 +203,7 @@ class GoogleLead(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Lead {self.lead_id}"
+        return f"{self.lead_id}"
     
 
 class GoogleLeadAnswer(models.Model):

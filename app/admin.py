@@ -383,8 +383,17 @@ class AdAdmin(admin.ModelAdmin):
 
         return fieldsets
 
+class GoogleLeadAdmin(admin.ModelAdmin):
+
+    list_display = ['user_uuid', 'lead_id', 'api_version', 'form_id', 'campaign_id', 'adgroup_id', 'creative_id', 'gcl_id', 'is_test']
+
+    # def get_queryset(self, request):
+    #     list_display = ['lead_id', 'form_id', 'campaign_id', 'adgroup_id', 'creative_id', 'gcl_id', 'is_test', 'google_key', 'created_at']
+    #     return list_display
 
 
+class GoogleLeadAnswerAdmin(admin.ModelAdmin):
+    list_display = ['lead', 'column_id', 'string_value']
 
 admin.site.register(DataStore)
 admin.site.register(TokenDate)
@@ -395,5 +404,5 @@ admin.site.register(Campaign, CampaignAdmin)
 admin.site.register(UserLeadInfo, UserInfoAdmin)
 admin.site.register(UserFieldAccess)
 admin.site.register(LeadgenData, LeadDataAdmin)
-admin.site.register(GoogleLead)
-admin.site.register(GoogleLeadAnswer)
+admin.site.register(GoogleLead,GoogleLeadAdmin)
+admin.site.register(GoogleLeadAnswer, GoogleLeadAnswerAdmin)
