@@ -189,6 +189,7 @@ class LeadgenData(models.Model):
 
 
 class GoogleLead(models.Model):
+    user_uuid = models.ForeignKey(UserData, on_delete=models.CASCADE, null=True, blank=True)
     lead_id = models.CharField(max_length=255)
     api_version = models.CharField(max_length=10, null=True, blank=True)
     form_id = models.IntegerField()

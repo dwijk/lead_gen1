@@ -12,6 +12,6 @@ urlpatterns = [
     path('auth/facebook/receive-token/<uuid:user_uuid>/', receive_token, name='receive_token'),
     path('facebook/login/<uuid:user_uuid>/', facebook_login_redirect, name='facebook-login'),  # First time 
     path('fetch-data/<uuid:user_uuid>/', fetch_data, name='fetch_data'),
-    path('google-ads-webhook/', google_ads_webhook, name='google_ads_webhook'),
+    path('google-ads-webhook/<uuid:user_uuid>/', google_ads_webhook, name='google_ads_webhook'),
 
 ]

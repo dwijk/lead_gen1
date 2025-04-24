@@ -551,21 +551,21 @@ def generate_token_60_days():
     pass
 
 @csrf_exempt
-def google_ads_webhook(request):
+def google_ads_webhook(request, user_uuid):
     print("google ads webhook")
     print("request",request.method)
     if request.method == "POST":
         try:
             data = json.loads(request.body)
             print("google ads webhook",data)
-            print("key",request.headers.get("X-Goog-Signature"))
             received_key = data.get("google_key")  # Use the correct key field name
             print("Received key:", received_key)
 
             if received_key != "mySuperSecretKey123":
                 return HttpResponseForbidden("Invalid webhook key")
-            
+            user_instance = UserData.objects.get(uuid=user_uuid)
             lead = GoogleLead.objects.create(
+                user_uuid=user_instance,
                 lead_id=data["lead_id"],
                 api_version=data.get("api_version"),
                 form_id=data.get("form_id"),
